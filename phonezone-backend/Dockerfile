@@ -1,12 +1,12 @@
-# 1. Build Phase using Maven and Java 21
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# 1. Build Phase
+FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# 2. Package Phase to run the executable JAR
-FROM eclipse-temurin:21-jre-jammy
+# 2. Run Phase
+FROM openjdk:17-jdk-slim
 WORKDIR /app
-COPY --from=build /app/target/phonezone-backend-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
