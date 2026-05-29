@@ -44,7 +44,7 @@ public class Product {
     @Column(nullable = false, length = 50)
     private String seal; // 'Sealed', 'Open-Box', 'Unsealed'
 
-    @Column(nullable = false, length = 255)
+    @Column(columnDefinition = "LONGTEXT", nullable = false)
     private String image;
 
     @Column(columnDefinition = "TEXT", nullable = false)

@@ -2,23 +2,275 @@
    PHONEZONE MAIN JAVASCRIPT APPLICATION LOGIC (AJAX & SPRING BOOT MYSQL VERSION)
    ========================================================================== */
 
-const API_BASE_URL = "https://phonezone-enterprise.onrender.com/api/products";
+const API_BASE_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://localhost:8080/api/products" : "https://phonezone-enterprise.onrender.com/api/products";
 
 // --- Application State ---
 let products = [];
 let sales = [];
+let cart = JSON.parse(localStorage.getItem("phonezone-cart")) || [];
 let activeFilters = {
     search: "",
     brands: [],
     seals: [],
     conditions: [],
-    maxPrice: 2000
+    maxPrice: 150000
 };
 let selectedProductForPurchase = null;
 let unseenSalesCount = 0;
+let currentActiveSale = null;
+
+// Carousel Gallery State
+let carouselImages = [];
+let currentSlideIndex = 0;
+
+// --- Shopping Cart & Tracking functions ---
+function saveCart() {
+    localStorage.setItem("phonezone-cart", JSON.stringify(cart));
+    updateCartCount();
+}
+
+function updateCartCount() {
+    const cartCountEl = document.getElementById("cart-item-count");
+    if (cartCountEl) {
+        cartCountEl.innerText = cart.length;
+    }
+}
+
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    if (product.stock === "Out of Stock") {
+        toast("This device is sold out and cannot be added to cart.", "warning");
+        return;
+    }
+
+    if (cart.some(item => item.id === productId)) {
+        toast("This unique device is already in your cart.", "info");
+        return;
+    }
+
+    cart.push(product);
+    saveCart();
+    renderCart();
+    openCartDrawer();
+    toast(`Added ${product.brand} ${product.model} to cart!`, "success");
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    saveCart();
+    renderCart();
+    toast("Item removed from cart.", "info");
+}
+
+window.removeFromCart = removeFromCart; // Expose to HTML onclick
+
+function renderCart() {
+    const cartList = document.getElementById("cart-items-list");
+    const cartEmpty = document.getElementById("cart-empty-state");
+    const cartFooter = document.getElementById("cart-drawer-footer");
+    const cartTotal = document.getElementById("cart-grand-total");
+
+    if (!cartList) return;
+
+    if (cart.length === 0) {
+        cartList.innerHTML = "";
+        cartEmpty.style.display = "flex";
+        cartFooter.style.display = "none";
+    } else {
+        cartEmpty.style.display = "none";
+        cartFooter.style.display = "block";
+        
+        let subtotal = 0;
+        cartList.innerHTML = cart.map(item => {
+            subtotal += item.price;
+            const displayAge = formatDeviceAge(item.ageValue, item.ageUnit);
+            return `
+                <div class="cart-item">
+                    <img src="${item.image ? item.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${item.model}" class="cart-item-thumb" onerror="this.src='assets/images/iphone.png'">
+                    <div class="cart-item-info">
+                        <div class="cart-item-title" style="font-weight:600;">${item.brand} ${item.model}</div>
+                        <div class="cart-item-meta">
+                            <span>${item.condition}</span>
+                            <span>•</span>
+                            <span>${displayAge}</span>
+                        </div>
+                        <div class="cart-item-price">${formatINR(item.price)}</div>
+                    </div>
+                    <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Remove Item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            `;
+        }).join("");
+
+        cartTotal.innerText = formatINR(subtotal);
+    }
+}
+
+function openCartDrawer() {
+    const drawer = document.getElementById("cart-drawer");
+    const overlay = document.getElementById("cart-drawer-overlay");
+    if (drawer) drawer.classList.add("open");
+    if (overlay) overlay.style.display = "block";
+}
+
+function closeCartDrawer() {
+    const drawer = document.getElementById("cart-drawer");
+    const overlay = document.getElementById("cart-drawer-overlay");
+    if (drawer) drawer.classList.remove("open");
+    if (overlay) overlay.style.display = "none";
+}
+
+
+
+// --- Live Activity Simulator (Visitors & Dispatch Time) ---
+function startLiveActivity() {
+    const visitorEl = document.getElementById("live-visitor-count");
+    const dispatchEl = document.getElementById("dispatch-timer");
+    
+    // Fluctuate visitor count dynamically
+    let currentVisitors = Math.floor(10 + Math.random() * 10);
+    if (visitorEl) visitorEl.innerText = currentVisitors;
+    
+    setInterval(() => {
+        const change = Math.random() > 0.5 ? 1 : -1;
+        currentVisitors = Math.max(6, Math.min(24, currentVisitors + change));
+        if (visitorEl) visitorEl.innerText = currentVisitors;
+    }, 4500);
+    
+    // Count down to daily 9:00 PM dispatch
+    function updateCountdown() {
+        const now = new Date();
+        const dispatchTime = new Date();
+        dispatchTime.setHours(21, 0, 0, 0); // 9:00 PM
+        
+        if (now.getTime() >= dispatchTime.getTime()) {
+            dispatchTime.setDate(dispatchTime.setDate() + 1);
+        }
+        
+        const diffMs = dispatchTime.getTime() - now.getTime();
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+        
+        const pad = (n) => n.toString().padStart(2, '0');
+        if (dispatchEl) {
+            dispatchEl.innerText = `${pad(diffHrs)}h ${pad(diffMins)}m ${pad(diffSecs)}s`;
+        }
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// --- Confetti Particle Celebration System ---
+function launchConfetti() {
+    let canvas = document.getElementById("confetti-canvas");
+    if (!canvas) {
+        canvas = document.createElement("canvas");
+        canvas.id = "confetti-canvas";
+        document.body.appendChild(canvas);
+    }
+    
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const colors = ["#8b5cf6", "#06b6d4", "#10b981", "#fbbf24", "#f43f5e", "#3b82f6"];
+    const particles = [];
+    const particleCount = 150;
+    
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * -canvas.height - 20;
+            this.width = Math.random() * 6 + 4;
+            this.height = Math.random() * 12 + 10;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.vx = Math.random() * 2 - 1;
+            this.vy = Math.random() * 2 + 1.5;
+            this.rotation = Math.random() * 360;
+            this.rotationSpeed = Math.random() * 2 - 1;
+            this.wobble = Math.random() * Math.PI;
+            this.wobbleSpeed = Math.random() * 0.1 + 0.05;
+        }
+        
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.wobble += this.wobbleSpeed;
+            this.rotation += this.rotationSpeed;
+            this.vx += Math.sin(this.wobble) * 0.1; // sway wind effect
+        }
+        
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate((this.rotation * Math.PI) / 180);
+            const scaleX = Math.cos(this.wobble);
+            ctx.scale(scaleX, 1);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.restore();
+        }
+    }
+    
+    for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+    }
+    
+    let animationFrameId;
+    const startTime = Date.now();
+    const duration = 6000; // run celebration for 6 seconds
+    
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        let allOut = true;
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+            if (p.y < canvas.height) {
+                allOut = false;
+            }
+        });
+        
+        const elapsed = Date.now() - startTime;
+        if (elapsed < duration && !allOut) {
+            animationFrameId = requestAnimationFrame(animate);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.remove();
+        }
+    }
+    
+    animate();
+    
+    window.addEventListener("resize", () => {
+        if (canvas) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+    });
+}
 
 // --- Initialize Database & State ---
 function initApp() {
+    // Load saved theme mode (light/dark)
+    const savedMode = localStorage.getItem("phonezone-mode") || "dark";
+    if (savedMode === "light") {
+        document.body.classList.add("light-mode");
+    } else {
+        document.body.classList.remove("light-mode");
+    }
+
+
+    
+    // Launch simulated live activities
+    startLiveActivity();
+
     // Show visual loading indicator in products grid
     const grid = document.getElementById("products-grid");
     grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-secondary);">
@@ -52,6 +304,10 @@ function initApp() {
         // Initial Render
         renderStorefront();
         renderDashboard();
+        
+        // Initialize Cart UI
+        updateCartCount();
+        renderCart();
         
         // Bind Event Handlers
         bindEvents();
@@ -154,38 +410,55 @@ function renderStorefront() {
     document.getElementById("displayed-products-count").innerText = filtered.length;
     document.getElementById("total-products-count").innerText = products.length;
 
-    // Toggle Empty State
+    // Toggle Empty State & Customize message
     if (filtered.length === 0) {
         grid.style.display = "none";
         emptyState.style.display = "block";
+        
+        const emptyStateTitle = emptyState.querySelector("h3");
+        const emptyStateText = emptyState.querySelector("p");
+        const emptyStateBtn = document.getElementById("btn-reset-store-filters");
+        
+        if (products.length === 0) {
+            if (emptyStateTitle) emptyStateTitle.innerText = "Stock Replenishing...";
+            if (emptyStateText) emptyStateText.innerText = "Our technicians are currently diagnostics-checking a fresh batch of flagship devices. Please check back shortly!";
+            if (emptyStateBtn) emptyStateBtn.style.display = "none";
+        } else {
+            if (emptyStateTitle) emptyStateTitle.innerText = "No Devices Found";
+            if (emptyStateText) emptyStateText.innerText = "We couldn't find any products matching your specific combination of filters. Try clearing filters or refining search parameters.";
+            if (emptyStateBtn) emptyStateBtn.style.display = "inline-flex";
+        }
     } else {
         grid.style.display = "grid";
         emptyState.style.display = "none";
         
         grid.innerHTML = filtered.map(product => {
             const isOutOfStock = product.stock === "Out of Stock";
-            const originalPriceHTML = product.originalPrice ? `<span class="card-original-price">${formatUSD(product.originalPrice)}</span>` : "";
+            const originalPriceHTML = product.originalPrice ? `<span class="card-original-price">${formatINR(product.originalPrice)}</span>` : "";
             const discountHTML = product.originalPrice ? `<span class="discount-percentage">${calculateDiscount(product.price, product.originalPrice)}% OFF</span>` : "";
             
             // Build badge classes
             const sealClass = `badge-${product.seal.toLowerCase().replace("-", "")}`;
             const condClass = `badge-${product.condition.toLowerCase().replace(" ", "")}`;
+            const newBadgeHTML = isJustArrived(product.ageValue, product.ageUnit) ? '<span class="badge badge-new">Just Arrived</span>' : '';
+            const displayAge = formatDeviceAge(product.ageValue, product.ageUnit);
             
             return `
                 <div class="phone-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}">
                     <div class="card-badges">
                         ${isOutOfStock ? '<span class="badge badge-outstock">Sold Out</span>' : ''}
+                        ${newBadgeHTML}
                         <span class="badge ${sealClass}">${product.seal}</span>
                         <span class="badge ${condClass}">${product.condition}</span>
                     </div>
                     <div class="phone-card-image-box">
                         <div class="card-decor-glow"></div>
-                        <img src="${product.image}" alt="${product.brand} ${product.model}" class="phone-card-img" onerror="this.src='assets/images/iphone.png'">
+                        <img src="${product.image ? product.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${product.brand} ${product.model}" class="phone-card-img" onerror="this.src='assets/images/iphone.png'">
                     </div>
                     <div class="phone-card-details">
                         <div class="phone-meta-row">
                             <span class="phone-brand">${product.brand}</span>
-                            <span class="phone-age">${product.ageValue} ${product.ageUnit} old</span>
+                            <span class="phone-age">${displayAge}</span>
                         </div>
                         <h3 class="phone-title">${product.model}</h3>
                         
@@ -201,7 +474,7 @@ function renderStorefront() {
                         </div>
 
                         <div class="price-box">
-                            <span class="card-price">${formatUSD(product.price)}</span>
+                            <span class="card-price">${formatINR(product.price)}</span>
                             ${originalPriceHTML}
                             ${discountHTML}
                         </div>
@@ -227,11 +500,11 @@ function renderDashboard() {
     const avgPrice = totalListed > 0 ? products.reduce((acc, p) => acc + p.price, 0) / totalListed : 0;
 
     // Update Cards
-    document.getElementById("stat-revenue").innerText = formatUSD(totalRevenue);
+    document.getElementById("stat-revenue").innerText = formatINR(totalRevenue);
     document.getElementById("stat-sold").innerText = totalSold;
     document.getElementById("stat-active").innerText = activeProducts;
     document.getElementById("stat-in-stock").innerText = `${activeProducts} active, ${outOfStockProducts} sold out`;
-    document.getElementById("stat-avg-price").innerText = formatUSD(avgPrice);
+    document.getElementById("stat-avg-price").innerText = formatINR(avgPrice);
 
     // Render Inventory Table
     const invTableBody = document.getElementById("inventory-table-body");
@@ -258,7 +531,7 @@ function renderDashboard() {
                 <td class="font-mono text-cyan" style="font-weight:600;">${p.id}</td>
                 <td>
                     <div class="table-device-cell">
-                        <img src="${p.image}" alt="${p.model}" class="table-device-thumb" onerror="this.src='assets/images/iphone.png'">
+                        <img src="${p.image ? p.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${p.model}" class="table-device-thumb" onerror="this.src='assets/images/iphone.png'">
                         <div>
                             <div class="device-name-bold">${p.model}</div>
                             <div class="device-sub-brand">${p.brand}</div>
@@ -272,7 +545,7 @@ function renderDashboard() {
                     <div style="font-size:12px;">Age: ${p.ageValue} ${p.ageUnit}</div>
                     <div style="font-size:11px; color:var(--text-muted);">Warranty: ${p.warrantyValue > 0 ? `${p.warrantyValue} ${p.warrantyUnit}` : 'None'}</div>
                 </td>
-                <td style="font-weight: 700;">${formatUSD(p.price)}</td>
+                <td style="font-weight: 700;">${formatINR(p.price)}</td>
                 <td>
                     <button class="${stockBadgeClass}" onclick="toggleStockStatus('${p.id}')">
                         <span class="status-dot ${dotClass}"></span>
@@ -306,7 +579,25 @@ function renderDashboard() {
         // Render sorted by newest sale first
         const sortedSales = [...sales].reverse();
         salesTableBody.innerHTML = sortedSales.map(sale => {
-            const originalMSRP = sale.originalPrice ? formatUSD(sale.originalPrice) : '<span class="text-muted">N/A</span>';
+            const originalMSRP = sale.originalPrice ? formatINR(sale.originalPrice) : '<span class="text-muted">N/A</span>';
+            
+            const statusOptions = ["Pending", "Dispatched", "In Transit", "Delivered"];
+            const selectOptionsHTML = statusOptions.map(opt => `
+                <option value="${opt}" ${sale.status === opt ? 'selected' : ''}>${opt}</option>
+            `).join("");
+
+            // Color coding styling for the status select dropdown
+            let badgeStyle = "background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.2); color: #a78bfa;"; // Default violet
+            let statusDot = "dot-success";
+            if (sale.status === "Pending") {
+                badgeStyle = "background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;"; // Amber
+                statusDot = "dot-danger"; // Red-orange
+            } else if (sale.status === "Dispatched") {
+                badgeStyle = "background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.2); color: #22d3ee;"; // Cyan
+            } else if (sale.status === "Delivered") {
+                badgeStyle = "background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;"; // Emerald
+            }
+
             return `
                 <tr>
                     <td class="font-mono text-cyan" style="font-weight:600;">${sale.orderId}</td>
@@ -322,12 +613,17 @@ function renderDashboard() {
                     </td>
                     <td class="font-mono" style="font-size: 12.5px;">${sale.imei}</td>
                     <td>${originalMSRP}</td>
-                    <td class="text-success" style="font-weight: 800;">${formatUSD(sale.pricePaid)}</td>
+                    <td class="text-success" style="font-weight: 800;">${formatINR(sale.pricePaid)}</td>
                     <td>
                         <span class="stock-badge-active">
                             <span class="status-dot dot-success"></span>
                             <span>Success</span>
                         </span>
+                    </td>
+                    <td>
+                        <select onchange="updateSaleStatus('${sale.orderId}', this.value)" class="form-select" style="${badgeStyle} padding: 4px 8px; font-size: 11px; border-radius: 6px; cursor: pointer; outline: none; border: 1px solid transparent;">
+                            ${selectOptionsHTML}
+                        </select>
                     </td>
                 </tr>
             `;
@@ -368,12 +664,12 @@ function resetFiltersState() {
         brands: [],
         seals: [],
         conditions: [],
-        maxPrice: 2000
+        maxPrice: 150000
     };
     
     document.getElementById("search-input").value = "";
-    document.getElementById("price-slider").value = 2000;
-    document.getElementById("price-slider-value").innerText = "$2000";
+    document.getElementById("price-slider").value = 150000;
+    document.getElementById("price-slider-value").innerText = "₹1,50,000";
     
     const checkboxes = document.querySelectorAll('.checkbox-item input');
     checkboxes.forEach(chk => chk.checked = false);
@@ -386,9 +682,34 @@ window.openDetailsModal = function(productId) {
 
     selectedProductForPurchase = product;
 
-    // Set UI Values
-    document.getElementById("detail-image").src = product.image;
-    document.getElementById("detail-image").onerror = function() { this.src = "assets/images/iphone.png"; };
+    // Populate carousel track and dots
+    carouselImages = product.image ? product.image.split(",") : ["assets/images/iphone.png"];
+    currentSlideIndex = 0;
+
+    const track = document.getElementById("detail-carousel-track");
+    if (track) {
+        track.innerHTML = carouselImages.map(imgSrc => `
+            <div class="carousel-slide-item">
+                <img src="${imgSrc}" alt="${product.brand} ${product.model}" onerror="this.src='assets/images/iphone.png'">
+            </div>
+        `).join("");
+    }
+
+    const dotsContainer = document.getElementById("detail-carousel-dots");
+    if (dotsContainer) {
+        if (carouselImages.length > 1) {
+            dotsContainer.innerHTML = carouselImages.map((_, idx) => `
+                <span class="carousel-dot ${idx === 0 ? 'active' : ''}" onclick="setCarouselSlide(${idx})"></span>
+            `).join("");
+            document.getElementById("detail-carousel-prev").style.display = "flex";
+            document.getElementById("detail-carousel-next").style.display = "flex";
+        } else {
+            dotsContainer.innerHTML = "";
+            document.getElementById("detail-carousel-prev").style.display = "none";
+            document.getElementById("detail-carousel-next").style.display = "none";
+        }
+    }
+    updateCarouselView();
     
     const badgeSeal = document.getElementById("detail-badge-seal");
     badgeSeal.innerText = product.seal;
@@ -400,27 +721,28 @@ window.openDetailsModal = function(productId) {
 
     document.getElementById("detail-title-text").innerText = product.model;
     document.getElementById("detail-brand-text").innerText = `Brand: ${product.brand}`;
-    document.getElementById("detail-price-text").innerText = formatUSD(product.price);
+    document.getElementById("detail-price-text").innerText = formatINR(product.price);
     
     const origPriceEl = document.getElementById("detail-original-price-text");
     const savingsEl = document.getElementById("detail-savings-text");
     
     if (product.originalPrice) {
         origPriceEl.style.display = "inline";
-        origPriceEl.innerText = formatUSD(product.originalPrice);
+        origPriceEl.innerText = formatINR(product.originalPrice);
         savingsEl.style.display = "inline-flex";
         
         const savingsAmt = product.originalPrice - product.price;
         const savingsPct = calculateDiscount(product.price, product.originalPrice);
-        savingsEl.innerText = `Save ${formatUSD(savingsAmt)} (${savingsPct}% off)`;
+        savingsEl.innerText = `Save ${formatINR(savingsAmt)} (${savingsPct}% off)`;
     } else {
         origPriceEl.style.display = "none";
         savingsEl.style.display = "none";
     }
 
-    document.getElementById("detail-age-text").innerText = `${product.ageValue} ${product.ageUnit}`;
+    const isNew = isJustArrived(product.ageValue, product.ageUnit);
+    document.getElementById("detail-age-text").innerText = formatDeviceAge(product.ageValue, product.ageUnit) + (isNew ? " (Just Arrived)" : "");
     document.getElementById("detail-warranty-text").innerText = product.warrantyValue > 0 ? `${product.warrantyValue} ${product.warrantyUnit} remaining` : "Expired / No Warranty";
-    document.getElementById("detail-imei-text").innerText = product.imei;
+    document.getElementById("detail-imei-text").innerText = maskIMEI(product.imei);
     document.getElementById("detail-desc-text").innerText = product.description;
 
     // Stock control
@@ -447,15 +769,26 @@ window.openDetailsModal = function(productId) {
 
 // --- Checkout Flow Logic ---
 function openCheckoutModal() {
-    if (!selectedProductForPurchase) return;
+    if (cart.length === 0) {
+        toast("Your cart is empty.", "warning");
+        return;
+    }
 
     // Reset Forms
     document.getElementById("checkout-shipping-form").reset();
     document.getElementById("checkout-payment-form").reset();
 
-    // Populate checkout item summary
-    document.getElementById("chk-summary-phone").innerText = `${selectedProductForPurchase.brand} ${selectedProductForPurchase.model}`;
-    document.getElementById("chk-summary-total").innerText = formatUSD(selectedProductForPurchase.price);
+    // Populate checkout item summary with list of items in cart
+    const summaryItemsEl = document.getElementById("chk-summary-phone");
+    summaryItemsEl.innerHTML = cart.map(item => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;">
+            <span style="font-weight:500; color:white;">${item.brand} ${item.model}</span>
+            <span style="color:var(--color-cyan); font-weight:600;">${formatINR(item.price)}</span>
+        </div>
+    `).join("");
+
+    let grandTotal = cart.reduce((sum, item) => sum + item.price, 0);
+    document.getElementById("chk-summary-total").innerText = formatINR(grandTotal);
 
     // Show Step 1, Hide others
     showCheckoutStep(1);
@@ -480,7 +813,10 @@ function showCheckoutStep(stepNumber) {
 // --- Dashboard Inventory Actions ---
 window.toggleStockStatus = function(productId) {
     fetch(`${API_BASE_URL}/toggle-stock/${productId}`, {
-        method: "PUT"
+        method: "PUT",
+        headers: {
+            "X-API-KEY": sessionStorage.getItem("phonezone-admin-passcode") || ""
+        }
     })
     .then(res => {
         if (!res.ok) throw new Error("Failed to toggle stock status");
@@ -508,7 +844,10 @@ window.deleteListing = function(productId) {
 
     if (confirm(`Are you sure you want to permanently delete the listing for "${product.brand} ${product.model}"?`)) {
         fetch(`${API_BASE_URL}/${productId}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                "X-API-KEY": sessionStorage.getItem("phonezone-admin-passcode") || ""
+            }
         })
         .then(res => {
             if (!res.ok) throw new Error("Failed to delete product listing");
@@ -545,7 +884,18 @@ window.triggerEditForm = function(productId) {
     document.getElementById("form-age-unit").value = product.ageUnit;
     document.getElementById("form-warranty-value").value = product.warrantyValue;
     document.getElementById("form-warranty-unit").value = product.warrantyUnit;
-    document.getElementById("form-image-preset").value = product.image;
+    
+    const isPreset = product.image && product.image.startsWith("assets/");
+    if (isPreset) {
+        document.querySelector('input[name="image-mode"][value="preset"]').checked = true;
+        toggleImageUploadMode('preset');
+        document.getElementById("form-image-preset").value = product.image;
+    } else {
+        document.querySelector('input[name="image-mode"][value="upload"]').checked = true;
+        toggleImageUploadMode('upload');
+        document.getElementById("form-image-upload").value = "";
+    }
+    
     document.getElementById("form-condition").value = product.condition;
     document.getElementById("form-seal").value = product.seal;
     document.getElementById("form-stock").value = product.stock;
@@ -589,14 +939,246 @@ function toast(message, type = "success") {
 }
 
 // --- Helper Functions ---
-function formatUSD(num) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+function formatINR(num) {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 }
 
 // Discount calculator
 function calculateDiscount(price, original) {
     if (!original || original <= price) return 0;
     return Math.round(((original - price) / original) * 100);
+}
+
+function getAgeInMonths(ageValue, ageUnit) {
+    let ageInMonths = 0;
+    const val = parseFloat(ageValue) || 0;
+    if (ageUnit === "days") {
+        ageInMonths = val / 30.4;
+    } else if (ageUnit === "months") {
+        ageInMonths = val;
+    } else if (ageUnit === "years") {
+        ageInMonths = val * 12;
+    }
+    return ageInMonths;
+}
+
+function formatDeviceAge(ageValue, ageUnit) {
+    const ageInMonths = getAgeInMonths(ageValue, ageUnit);
+    if (ageInMonths >= 12) {
+        const currentYear = new Date().getFullYear();
+        const ageInYears = ageInMonths / 12;
+        const modelYear = Math.round(currentYear - ageInYears);
+        return `Model Year: ${modelYear}`;
+    } else {
+        return `${ageValue} ${ageUnit} old`;
+    }
+}
+
+function isJustArrived(ageValue, ageUnit) {
+    const ageInMonths = getAgeInMonths(ageValue, ageUnit);
+    return ageInMonths < 3;
+}
+
+function maskIMEI(imei) {
+    if (!imei || imei.length < 9) return "•••••••••••••••";
+    return imei.slice(0, 7) + "******" + imei.slice(-2);
+}
+
+function downloadDiagnosticsPDF(product) {
+    const today = new Date().toLocaleDateString('en-IN');
+    const pdfContent = `%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 595.28 841.89] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>
+endobj
+5 0 obj
+<< /Length 750 >>
+stream
+BT
+/F1 22 Tf
+70 750 Td
+(PHONEZONE CERTIFICATE OF DIAGNOSTICS & QUALITY) Tj
+/F2 12 Tf
+0 -40 Td
+(This document verifies that the device listed below has undergone our rigorous) Tj
+0 -15 Td
+(45-point hardware and software diagnostics check and is certified for sale.) Tj
+0 -40 Td
+/F1 14 Tf
+(DEVICE PROFILE:) Tj
+/F2 12 Tf
+0 -25 Td
+(Brand: ${product.brand}) Tj
+0 -20 Td
+(Model: ${product.model}) Tj
+0 -20 Td
+(Serial/IMEI: ${product.imei}) Tj
+0 -20 Td
+(Device Condition: ${product.condition}) Tj
+0 -20 Td
+(Seal Status: ${product.seal}) Tj
+0 -40 Td
+/F1 14 Tf
+(DIAGNOSTICS CHECKLIST RESULT: PASS) Tj
+/F2 12 Tf
+0 -25 Td
+(- IMEI status check: CLEAN / NOT BLACKLISTED) Tj
+0 -20 Td
+(- MDM / Find My Phone Lock check: REMOVED / DEACTIVATED) Tj
+0 -20 Td
+(- Screen, Touch Digitizer & OLED: 100% FUNCTIONAL) Tj
+0 -20 Td
+(- Battery Health: PASSED) Tj
+0 -20 Td
+(- Camera autofocus, Flash & Sensors: OK) Tj
+0 -20 Td
+(- Wireless connection (Wi-Fi, Bluetooth, 5G/LTE): OK) Tj
+0 -20 Td
+(- Audio output (Speakers, Mic, Receiver): OK) Tj
+0 -40 Td
+(Certified by PhoneZone Enterprise Security Gateway on ${today}.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000062 00000 n 
+0000000117 00000 n 
+0000000229 00000 n 
+0000000346 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1148
+%%EOF`;
+
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Diagnostics_Report_${product.brand}_${product.model.replace(/\s+/g, '_')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function downloadInvoicePDF(saleOrSales) {
+    if (!saleOrSales) return;
+    
+    // Check if it is array or single object
+    const isArray = Array.isArray(saleOrSales);
+    const salesList = isArray ? saleOrSales : [saleOrSales];
+    
+    if (salesList.length === 0) return;
+    
+    const primeSale = salesList[0];
+    const dateStr = new Date(primeSale.timestamp).toLocaleDateString('en-IN');
+    
+    // Calculate total price
+    const totalPaid = salesList.reduce((sum, s) => sum + s.pricePaid, 0);
+    
+    // Create items details string
+    let itemsDetailsPDF = "";
+    salesList.forEach((s, idx) => {
+        itemsDetailsPDF += `0 -20 Td (${idx+1}. ${s.brand} ${s.model} - IMEI: ${s.imei}) Tj\n`;
+        itemsDetailsPDF += `0 -15 Td (   Price: INR ${s.pricePaid.toLocaleString('en-IN')} | Warranty: ${s.warrantyLeft || 'Expired'}) Tj\n`;
+    });
+    
+    const pdfContent = `%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 595.28 841.89] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>
+endobj
+5 0 obj
+<< /Length 1200 >>
+stream
+BT
+/F1 20 Tf
+70 760 Td
+(PHONEZONE RETAIL CO. - TAX INVOICE) Tj
+/F2 11 Tf
+0 -35 Td
+(Order ID: ${primeSale.orderId}) Tj
+0 -18 Td
+(Transaction ID: ${primeSale.txId}) Tj
+0 -18 Td
+(Date: ${dateStr}) Tj
+0 -30 Td
+/F1 13 Tf
+(BILL TO:) Tj
+/F2 11 Tf
+0 -20 Td
+(Customer Name: ${primeSale.customerName}) Tj
+0 -18 Td
+(Email Address: ${primeSale.customerEmail}) Tj
+0 -18 Td
+(Shipping Address: ${primeSale.customerAddress}, ${primeSale.customerCity}) Tj
+0 -35 Td
+/F1 13 Tf
+(PRODUCT DETAILS:) Tj
+/F2 11 Tf
+${itemsDetailsPDF}
+/F1 13 Tf
+0 -30 Td
+(AMOUNT BILLED:) Tj
+/F2 11 Tf
+0 -20 Td
+(Subtotal: INR ${totalPaid.toLocaleString('en-IN')}) Tj
+0 -18 Td
+(Shipping & Insurance: FREE) Tj
+/F1 13 Tf
+0 -22 Td
+(Total Paid: INR ${totalPaid.toLocaleString('en-IN')}) Tj
+/F2 10 Tf
+0 -40 Td
+(Thank you for shopping at PhoneZone! For support, email help@phonezone.com) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000062 00000 n 
+0000000117 00000 n 
+0000000229 00000 n 
+0000000346 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1250
+%%EOF`;
+
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Invoice_${primeSale.orderId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 function getAgeInDays(prod) {
@@ -619,8 +1201,80 @@ function getWarrantyInDays(prod) {
     return days;
 }
 
+// --- Carousel & Image Upload Helpers ---
+window.toggleImageUploadMode = function(mode) {
+    const fieldPreset = document.getElementById("field-image-preset");
+    const fieldUpload = document.getElementById("field-image-upload");
+    if (mode === 'upload') {
+        fieldPreset.style.display = "none";
+        fieldUpload.style.display = "block";
+    } else {
+        fieldPreset.style.display = "block";
+        fieldUpload.style.display = "none";
+    }
+};
+
+function readImagesAsBase64(files) {
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+        });
+    });
+    return Promise.all(promises);
+}
+
+window.moveCarousel = function(direction) {
+    if (carouselImages.length <= 1) return;
+    currentSlideIndex += direction;
+    if (currentSlideIndex < 0) {
+        currentSlideIndex = carouselImages.length - 1;
+    } else if (currentSlideIndex >= carouselImages.length) {
+        currentSlideIndex = 0;
+    }
+    updateCarouselView();
+};
+
+window.setCarouselSlide = function(index) {
+    currentSlideIndex = index;
+    updateCarouselView();
+};
+
+function updateCarouselView() {
+    const track = document.getElementById("detail-carousel-track");
+    const dotsContainer = document.getElementById("detail-carousel-dots");
+    if (!track) return;
+    const offset = -currentSlideIndex * 100;
+    track.style.transform = `translateX(${offset}%)`;
+    
+    if (dotsContainer) {
+        const dots = dotsContainer.querySelectorAll(".carousel-dot");
+        dots.forEach((dot, idx) => {
+            if (idx === currentSlideIndex) {
+                dot.classList.add("active");
+            } else {
+                dot.classList.remove("active");
+            }
+        });
+    }
+}
+
 // --- Event Binding ---
 function bindEvents() {
+
+
+    // Light/Dark Mode toggle handler
+    const btnThemeToggle = document.getElementById("btn-theme-toggle");
+    if (btnThemeToggle) {
+        btnThemeToggle.addEventListener("click", () => {
+            const isLight = document.body.classList.toggle("light-mode");
+            localStorage.setItem("phonezone-mode", isLight ? "light" : "dark");
+            toast(`Switched to ${isLight ? 'Light' : 'Dark'} Mode!`, "info");
+        });
+    }
+
     // Nav view switcher buttons
     const btnStore = document.getElementById("btn-store-view");
     const btnAdmin = document.getElementById("btn-admin-view");
@@ -628,6 +1282,20 @@ function bindEvents() {
     
     const customerView = document.getElementById("customer-view");
     const adminView = document.getElementById("admin-view");
+    const adminLoginModal = document.getElementById("admin-login-modal");
+    const adminPasscode = document.getElementById("admin-passcode");
+
+    function syncPinDots() {
+        const val = adminPasscode.value;
+        const dots = document.querySelectorAll("#admin-pin-dots .pin-dot");
+        dots.forEach((dot, idx) => {
+            if (idx < val.length) {
+                dot.classList.add("filled");
+            } else {
+                dot.classList.remove("filled");
+            }
+        });
+    }
 
     function switchView(viewName) {
         if (viewName === "store") {
@@ -636,6 +1304,18 @@ function bindEvents() {
             customerView.classList.add("active");
             adminView.classList.remove("active");
         } else {
+            if (sessionStorage.getItem("phonezone-admin-auth") !== "true") {
+                adminLoginModal.style.display = "flex";
+                const lockIcon = document.getElementById("admin-lock-icon-container");
+                if (lockIcon) {
+                    lockIcon.classList.remove("unlocked");
+                }
+                adminPasscode.value = "";
+                syncPinDots();
+                setTimeout(() => adminPasscode.focus(), 100);
+                return;
+            }
+
             btnStore.classList.remove("active");
             btnAdmin.classList.add("active");
             customerView.classList.remove("active");
@@ -657,15 +1337,38 @@ function bindEvents() {
     btnAdmin.addEventListener("click", () => switchView("admin"));
     logo.addEventListener("click", () => switchView("store"));
     
-    // Quick Checkout Cart Button Click
+    // Cart Button Click - Open the Cart Drawer
     document.getElementById("btn-cart-view").addEventListener("click", () => {
-        // Quick checkout checks first product available in stock
-        const firstInStock = products.find(p => p.stock === "In Stock");
-        if (firstInStock) {
-            selectedProductForPurchase = firstInStock;
-            openCheckoutModal();
-        } else {
-            toast("No items are currently in stock for purchase.", "warning");
+        openCartDrawer();
+    });
+
+    // Cart Drawer bindings
+    document.getElementById("btn-close-cart").addEventListener("click", () => {
+        closeCartDrawer();
+    });
+    document.getElementById("cart-drawer-overlay").addEventListener("click", () => {
+        closeCartDrawer();
+    });
+    document.getElementById("btn-cart-continue").addEventListener("click", () => {
+        closeCartDrawer();
+    });
+    document.getElementById("btn-cart-checkout").addEventListener("click", () => {
+        closeCartDrawer();
+        openCheckoutModal();
+    });
+
+    // Tracking Order bindings
+    document.getElementById("btn-track-order").addEventListener("click", () => {
+        trackOrder();
+    });
+    document.getElementById("track-order-id-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            trackOrder();
+        }
+    });
+    document.getElementById("btn-track-download-invoice").addEventListener("click", () => {
+        if (window.trackActiveOrderItems) {
+            downloadInvoicePDF(window.trackActiveOrderItems);
         }
     });
 
@@ -694,7 +1397,7 @@ function bindEvents() {
     
     priceSlider.addEventListener("input", (e) => {
         activeFilters.maxPrice = parseFloat(e.target.value);
-        priceSliderValue.innerText = formatUSD(activeFilters.maxPrice);
+        priceSliderValue.innerText = formatINR(activeFilters.maxPrice);
         renderStorefront();
     });
 
@@ -712,6 +1415,133 @@ function bindEvents() {
         document.getElementById("checkout-modal").style.display = "none";
     });
 
+    const closeAdminLogin = () => {
+        adminLoginModal.style.display = "none";
+        adminPasscode.value = "";
+        syncPinDots();
+    };
+
+    document.getElementById("btn-close-admin-login").addEventListener("click", closeAdminLogin);
+
+    const keypadCancel = document.getElementById("btn-keypad-cancel");
+    if (keypadCancel) {
+        keypadCancel.addEventListener("click", closeAdminLogin);
+    }
+
+    const keypadBackspace = document.getElementById("btn-keypad-backspace");
+    if (keypadBackspace) {
+        keypadBackspace.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const pinDotsContainer = document.getElementById("admin-pin-dots");
+            const lockIcon = document.getElementById("admin-lock-icon-container");
+            if (pinDotsContainer.classList.contains("shake-dots") || lockIcon.classList.contains("unlocked")) {
+                return;
+            }
+            adminPasscode.value = adminPasscode.value.slice(0, -1);
+            syncPinDots();
+            adminPasscode.focus();
+        });
+    }
+
+    // Focus physical input field when clicking anywhere in pin wrapper
+    const pinWrapper = document.querySelector(".pin-wrapper");
+    if (pinWrapper) {
+        pinWrapper.addEventListener("click", () => {
+            adminPasscode.focus();
+        });
+    }
+
+    function validatePasscode() {
+        const passcode = adminPasscode.value;
+        const lockIcon = document.getElementById("admin-lock-icon-container");
+        const pinDotsContainer = document.getElementById("admin-pin-dots");
+        
+        if (passcode === "8080") {
+            sessionStorage.setItem("phonezone-admin-auth", "true");
+            sessionStorage.setItem("phonezone-admin-passcode", passcode);
+            
+            // Animate lock opening!
+            if (lockIcon) {
+                lockIcon.classList.add("unlocked");
+            }
+            
+            toast("Authentication successful! Welcome to Dashboard.", "success");
+            
+            // Wait for open-lock animations
+            setTimeout(() => {
+                closeAdminLogin();
+                switchView("admin");
+            }, 600);
+        } else {
+            // Error shake feedback
+            if (pinDotsContainer) {
+                pinDotsContainer.classList.add("shake-dots");
+                setTimeout(() => {
+                    pinDotsContainer.classList.remove("shake-dots");
+                    adminPasscode.value = "";
+                    syncPinDots();
+                    adminPasscode.focus();
+                }, 500);
+            }
+            toast("Incorrect passcode. Access Denied.", "danger");
+        }
+    }
+
+    // Handle physical keyboard typing
+    adminPasscode.addEventListener("input", () => {
+        const pinDotsContainer = document.getElementById("admin-pin-dots");
+        const lockIcon = document.getElementById("admin-lock-icon-container");
+        if (pinDotsContainer.classList.contains("shake-dots") || lockIcon.classList.contains("unlocked")) {
+            adminPasscode.value = "";
+            syncPinDots();
+            return;
+        }
+
+        adminPasscode.value = adminPasscode.value.replace(/[^0-9]/g, '').slice(0, 4);
+        syncPinDots();
+
+        if (adminPasscode.value.length === 4) {
+            validatePasscode();
+        }
+    });
+
+    // Handle virtual keypad numeric button clicks
+    const keypadBtns = document.querySelectorAll(".keypad-btn");
+    keypadBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent refocusing event triggering twice
+            const val = btn.getAttribute("data-val");
+            const pinDotsContainer = document.getElementById("admin-pin-dots");
+            const lockIcon = document.getElementById("admin-lock-icon-container");
+            
+            // Block input if currently shaking or unlocked
+            if (pinDotsContainer.classList.contains("shake-dots") || lockIcon.classList.contains("unlocked")) {
+                return;
+            }
+
+            if (adminPasscode.value.length < 4) {
+                adminPasscode.value += val;
+            }
+            syncPinDots();
+
+            if (adminPasscode.value.length === 4) {
+                validatePasscode();
+            } else {
+                adminPasscode.focus();
+            }
+        });
+    });
+
+    // Admin logout button click
+    const btnAdminLogout = document.getElementById("btn-admin-logout");
+    if (btnAdminLogout) {
+        btnAdminLogout.addEventListener("click", () => {
+            sessionStorage.removeItem("phonezone-admin-auth");
+            toast("Admin logged out successfully.", "info");
+            switchView("store");
+        });
+    }
+
     // Close modals when clicking overlay
     window.addEventListener("click", (e) => {
         const detailsModal = document.getElementById("details-modal");
@@ -727,12 +1557,17 @@ function bindEvents() {
                 checkoutModal.style.display = "none";
             }
         }
+        if (e.target === adminLoginModal) {
+            closeAdminLogin();
+        }
     });
 
-    // Detail buy button
+    // Detail Add to Cart button
     document.getElementById("btn-details-checkout").addEventListener("click", () => {
-        document.getElementById("details-modal").style.display = "none";
-        openCheckoutModal();
+        if (selectedProductForPurchase) {
+            addToCart(selectedProductForPurchase.id);
+            document.getElementById("details-modal").style.display = "none";
+        }
     });
 
     // Checkout Step 1 Shipping Form Submission
@@ -832,6 +1667,7 @@ function bindEvents() {
             toggleFormBtn.style.display = "none";
             document.getElementById("form-title").innerText = "Add New Phone Listing";
             document.getElementById("product-form").reset();
+            toggleImageUploadMode('preset');
             document.getElementById("form-product-id").value = "";
         } else {
             formContainer.style.display = "none";
@@ -858,7 +1694,6 @@ function bindEvents() {
         const ageUnit = document.getElementById("form-age-unit").value;
         const warrantyValue = parseFloat(document.getElementById("form-warranty-value").value);
         const warrantyUnit = document.getElementById("form-warranty-unit").value;
-        const image = document.getElementById("form-image-preset").value;
         const condition = document.getElementById("form-condition").value;
         const seal = document.getElementById("form-seal").value;
         const stock = document.getElementById("form-stock").value;
@@ -866,56 +1701,81 @@ function bindEvents() {
 
         // Perform edit vs add
         const productId = productIdVal || `PZ-${Math.floor(1000 + Math.random() * 9000)}`;
-        
-        const productPayload = {
-            id: productId,
-            brand,
-            model,
-            price,
-            originalPrice,
-            imei,
-            ageValue,
-            ageUnit,
-            warrantyValue,
-            warrantyUnit,
-            phoneCondition: condition, // Maps to backend property
-            seal,
-            image,
-            stock,
-            description
-        };
 
-        // Submit to Spring Boot API
-        fetch(API_BASE_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(productPayload)
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Failed to save product listing");
-            return res.json();
-        })
-        .then(savedProduct => {
-            savedProduct.condition = savedProduct.phoneCondition || savedProduct.condition;
-            
-            const index = products.findIndex(p => p.id === savedProduct.id);
-            if (index !== -1) {
-                products[index] = savedProduct;
-                toast("Listing updated successfully!");
+        const imageMode = document.querySelector('input[name="image-mode"]:checked').value;
+        let imagePromise;
+        if (imageMode === 'upload') {
+            const files = document.getElementById("form-image-upload").files;
+            if (files.length === 0) {
+                const product = products.find(p => p.id === productIdVal);
+                if (product && product.image) {
+                    imagePromise = Promise.resolve(product.image);
+                } else {
+                    toast("Please upload at least one phone photo.", "warning");
+                    return;
+                }
             } else {
-                products.push(savedProduct);
-                toast("New phone listing published successfully!");
+                imagePromise = readImagesAsBase64(files).then(base64s => base64s.join(","));
             }
+        } else {
+            imagePromise = Promise.resolve(document.getElementById("form-image-preset").value);
+        }
 
-            toggleAddForm(false);
-            renderStorefront();
-            renderDashboard();
-        })
-        .catch(err => {
+        imagePromise.then(image => {
+            const productPayload = {
+                id: productId,
+                brand,
+                model,
+                price,
+                originalPrice,
+                imei,
+                ageValue,
+                ageUnit,
+                warrantyValue,
+                warrantyUnit,
+                phoneCondition: condition, // Maps to backend property
+                seal,
+                image,
+                stock,
+                description
+            };
+
+            // Submit to Spring Boot API
+            fetch(API_BASE_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-KEY": sessionStorage.getItem("phonezone-admin-passcode") || ""
+                },
+                body: JSON.stringify(productPayload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to save product listing");
+                return res.json();
+            })
+            .then(savedProduct => {
+                savedProduct.condition = savedProduct.phoneCondition || savedProduct.condition;
+                
+                const index = products.findIndex(p => p.id === savedProduct.id);
+                if (index !== -1) {
+                    products[index] = savedProduct;
+                    toast("Listing updated successfully!");
+                } else {
+                    products.push(savedProduct);
+                    toast("New phone listing published successfully!");
+                }
+
+                toggleAddForm(false);
+                renderStorefront();
+                renderDashboard();
+            })
+            .catch(err => {
+                console.error(err);
+                toast("Failed to save phone listing to backend.", "danger");
+            });
+        }).catch(err => {
             console.error(err);
-            toast("Failed to save phone listing to backend.", "danger");
+            toast("Failed to process photo uploads.", "danger");
         });
     });
 
@@ -941,6 +1801,28 @@ function bindEvents() {
         tabSalesContent.classList.remove("active");
     });
 
+    // Diagnostics report download click handler
+    const btnDownloadDiag = document.getElementById("btn-download-diagnostics");
+    if (btnDownloadDiag) {
+        btnDownloadDiag.addEventListener("click", () => {
+            if (selectedProductForPurchase) {
+                downloadDiagnosticsPDF(selectedProductForPurchase);
+            }
+        });
+    }
+
+    // Invoice download click handler
+    const btnDownloadInvoice = document.getElementById("btn-download-invoice");
+    if (btnDownloadInvoice) {
+        btnDownloadInvoice.addEventListener("click", () => {
+            if (currentActiveSale) {
+                downloadInvoicePDF(currentActiveSale);
+            } else {
+                toast("No active transaction found to download.", "warning");
+            }
+        });
+    }
+
     tabSalesBtn.addEventListener("click", () => {
         tabInvBtn.classList.remove("active");
         tabSalesBtn.classList.add("active");
@@ -951,7 +1833,7 @@ function bindEvents() {
 
 // --- Finalize Purchase Transaction ---
 function completeTransaction() {
-    if (!selectedProductForPurchase) return;
+    if (cart.length === 0) return;
 
     // Gather shipping/customer details
     const nameVal = document.getElementById("chk-name").value;
@@ -963,73 +1845,212 @@ function completeTransaction() {
     const randomOrderId = `PZ-ORD-${Math.floor(100000 + Math.random() * 900000)}`;
     const txId = `TX-${Math.floor(10000000 + Math.random() * 90000000)}`;
 
-    const salePayload = {
+    const salesPayload = cart.map(item => ({
         orderId: randomOrderId,
         txId: txId,
-        productId: selectedProductForPurchase.id,
-        brand: selectedProductForPurchase.brand,
-        model: selectedProductForPurchase.model,
-        imei: selectedProductForPurchase.imei,
-        originalPrice: selectedProductForPurchase.originalPrice,
-        pricePaid: selectedProductForPurchase.price,
-        warrantyLeft: `${selectedProductForPurchase.warrantyValue} ${selectedProductForPurchase.warrantyUnit}`,
+        productId: item.id,
+        brand: item.brand,
+        model: item.model,
+        imei: item.imei,
+        originalPrice: item.originalPrice,
+        pricePaid: item.price,
+        warrantyLeft: `${item.warrantyValue} ${item.warrantyUnit}`,
         customerName: nameVal,
         customerEmail: emailVal,
         customerAddress: addressVal,
         customerCity: cityVal
-    };
+    }));
 
-    // Submit transaction to backend purchase endpoint
-    fetch(`${API_BASE_URL}/purchase/${selectedProductForPurchase.id}`, {
+    // Submit bulk transaction to backend purchase endpoint
+    fetch(`${API_BASE_URL}/purchase/bulk`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(salePayload)
+        body: JSON.stringify(salesPayload)
     })
     .then(res => {
         if (!res.ok) throw new Error("Purchase processing failed");
         return res.json();
     })
-    .then(savedSale => {
-        // Update local state
-        const index = products.findIndex(p => p.id === selectedProductForPurchase.id);
-        if (index !== -1) {
-            products[index].stock = "Out of Stock";
-        }
-        
-        sales.push(savedSale);
+    .then(savedSales => {
+        // Update local state: mark all items as sold out
+        savedSales.forEach(sale => {
+            const index = products.findIndex(p => p.id === sale.productId);
+            if (index !== -1) {
+                products[index].stock = "Out of Stock";
+            }
+            sales.push(sale);
+        });
+
+        // Set active sales for invoice downloading
+        currentActiveSale = savedSales; 
 
         // Update notifications count badge
-        unseenSalesCount++;
+        unseenSalesCount += savedSales.length;
         const badge = document.getElementById("admin-badge-count");
-        badge.innerText = unseenSalesCount;
-        badge.style.display = "inline-flex";
+        if (badge) {
+            badge.innerText = unseenSalesCount;
+            badge.style.display = "inline-flex";
+        }
 
-        // Populate digital receipt values
-        document.getElementById("receipt-date-text").innerText = `Date: ${new Date(savedSale.timestamp).toLocaleDateString()}`;
-        document.getElementById("receipt-phone-name").innerText = `${savedSale.brand} ${savedSale.model}`;
-        document.getElementById("receipt-phone-price").innerText = formatUSD(savedSale.pricePaid);
-        document.getElementById("receipt-phone-imei").innerText = savedSale.imei;
-        document.getElementById("receipt-phone-warranty").innerText = savedSale.warrantyLeft || "Expired";
-        document.getElementById("receipt-customer-name").innerText = savedSale.customerName;
-        document.getElementById("receipt-grand-total").innerText = formatUSD(savedSale.pricePaid);
-        document.getElementById("receipt-txid").innerText = savedSale.txId;
+        // Render digital receipt items
+        const receiptContainer = document.getElementById("receipt-items-container");
+        if (receiptContainer) {
+            receiptContainer.innerHTML = savedSales.map(sale => `
+                <div class="receipt-item-row" style="margin-bottom:6px;">
+                    <span class="item-name" style="font-weight:600; color:var(--text-primary);">${sale.brand} ${sale.model}</span>
+                    <span class="item-val" style="color:var(--color-cyan); font-weight:700;">${formatINR(sale.pricePaid)}</span>
+                </div>
+                <div class="receipt-item-row font-mono text-small" style="margin-top:-4px; margin-bottom:12px; font-size:11px; color:var(--text-secondary);">
+                    <span>IMEI: ${sale.imei} | Warranty: ${sale.warrantyLeft || 'Expired'}</span>
+                </div>
+            `).join("");
+        }
+
+        let grandTotal = savedSales.reduce((sum, item) => sum + item.pricePaid, 0);
+
+        document.getElementById("receipt-date-text").innerText = `Date: ${new Date(savedSales[0].timestamp).toLocaleDateString()}`;
+        document.getElementById("receipt-customer-name").innerText = savedSales[0].customerName;
+        document.getElementById("receipt-grand-total").innerText = formatINR(grandTotal);
+        document.getElementById("receipt-txid").innerText = savedSales[0].txId;
+
+        // Clear cart
+        cart = [];
+        saveCart();
+        renderCart();
 
         // Show Success screen
         showCheckoutStep(4);
+
+        // Trigger particle confetti celebration
+        launchConfetti();
 
         // Refresh application renders
         renderStorefront();
         renderDashboard();
 
         // Trigger Notification Toast
-        toast(`Insured payment approved. Order logged for ${savedSale.customerName}!`, "success");
+        toast(`Insured payment approved. Order logged for ${savedSales[0].customerName}!`, "success");
     })
     .catch(err => {
         console.error(err);
         toast("Transaction declined by merchant server.", "danger");
         showCheckoutStep(2); // Go back to payment inputs
+    });
+}
+
+// --- Order Status Operations & Tracking Lookups ---
+window.updateSaleStatus = function(orderId, newStatus) {
+    fetch(`${API_BASE_URL}/purchase/status/${orderId}?status=${newStatus}`, {
+        method: "PUT",
+        headers: {
+            "X-API-KEY": sessionStorage.getItem("phonezone-admin-passcode") || ""
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Failed to update status");
+        return res.json();
+    })
+    .then(updatedSales => {
+        // Update status of all sales in local state sharing this orderId
+        sales.forEach(sale => {
+            if (sale.orderId === orderId) {
+                sale.status = newStatus;
+            }
+        });
+        toast(`Order ${orderId} status updated to ${newStatus}.`, "success");
+        renderDashboard();
+    })
+    .catch(err => {
+        console.error(err);
+        toast("Failed to update order status. Dashboard access might be unauthorized.", "danger");
+    });
+};
+
+window.trackOrder = function() {
+    const inputEl = document.getElementById("track-order-id-input");
+    const orderId = inputEl.value.trim().toUpperCase();
+    if (!orderId) {
+        toast("Please enter an Order ID.", "warning");
+        return;
+    }
+
+    fetch(`${API_BASE_URL}/purchase/lookup/${orderId}`)
+    .then(res => {
+        if (!res.ok) throw new Error("Order not found");
+        return res.json();
+    })
+    .then(orderItems => {
+        document.getElementById("tracking-results-panel").style.display = "block";
+        document.getElementById("track-order-id-display").innerText = orderId;
+        
+        const orderDate = new Date(orderItems[0].timestamp).toLocaleDateString('en-IN');
+        document.getElementById("track-order-date").innerText = orderDate;
+
+        // Render the items in lookup list
+        const trackItemsList = document.getElementById("track-items-list");
+        trackItemsList.innerHTML = orderItems.map(item => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-glass);">
+                <div>
+                    <span style="font-weight:600; color:var(--text-primary); font-size:13.5px;">${item.brand} ${item.model}</span>
+                    <span style="font-family:monospace; font-size:11px; color:var(--text-secondary); margin-left:10px;">IMEI: ${item.imei}</span>
+                </div>
+                <span style="font-weight:700; color:var(--color-cyan); font-size:13.5px;">${formatINR(item.pricePaid)}</span>
+            </div>
+        `).join("");
+
+        // Update Timeline
+        const status = orderItems[0].status; 
+        updateTimelineProgress(status);
+
+        // Store for invoice re-download in lookup section
+        window.trackActiveOrderItems = orderItems;
+
+        toast("Order details retrieved successfully.", "success");
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById("tracking-results-panel").style.display = "none";
+        toast(`Order reference "${orderId}" not found.`, "danger");
+    });
+};
+
+function updateTimelineProgress(status) {
+    const steps = ["Pending", "Dispatched", "In Transit", "Delivered"];
+    const currentStepIdx = steps.indexOf(status);
+
+    // Map status to progress bar width
+    let barWidth = "0%";
+    if (currentStepIdx === 0) barWidth = "12.5%";
+    else if (currentStepIdx === 1) barWidth = "37.5%";
+    else if (currentStepIdx === 2) barWidth = "62.5%";
+    else if (currentStepIdx === 3) barWidth = "100%";
+
+    const bar = document.getElementById("track-timeline-bar");
+    if (bar) bar.style.width = barWidth;
+
+    // Highlight timeline steps
+    const stepIds = ["step-pending", "step-dispatched", "step-intransit", "step-delivered"];
+    stepIds.forEach((id, idx) => {
+        const stepDiv = document.getElementById(id);
+        if (!stepDiv) return;
+        const dot = stepDiv.querySelector(".timeline-dot");
+        const label = stepDiv.querySelector(".timeline-label");
+
+        if (idx <= currentStepIdx) {
+            dot.style.background = "linear-gradient(135deg, var(--color-cyan), var(--color-violet))";
+            dot.style.borderColor = "var(--color-cyan)";
+            dot.style.color = "white";
+            dot.style.boxShadow = "0 0 10px rgba(6, 182, 212, 0.4)";
+            label.style.color = "var(--text-primary)";
+        } else {
+            dot.style.background = "";
+            dot.style.borderColor = "";
+            dot.style.color = "";
+            dot.style.boxShadow = "";
+            label.style.color = "";
+        }
     });
 }
 

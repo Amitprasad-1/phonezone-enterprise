@@ -2,6 +2,7 @@ package com.phonezone.config;
 
 import com.phonezone.model.Product;
 import com.phonezone.repository.ProductRepository;
+import com.phonezone.repository.SaleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private SaleRepository saleRepository;
+
     @Override
     public void run(String... args) throws Exception {
         if (productRepository.count() == 0) {
@@ -21,8 +25,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p1.setId("PZ-8391");
             p1.setBrand("Apple");
             p1.setModel("iPhone 15 Pro");
-            p1.setPrice(899.00);
-            p1.setOriginalPrice(999.00);
+            p1.setPrice(89900.00);
+            p1.setOriginalPrice(99900.00);
             p1.setImei("358291049281749");
             p1.setAgeValue(3.0);
             p1.setAgeUnit("months");
@@ -38,8 +42,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p2.setId("PZ-7429");
             p2.setBrand("Samsung");
             p2.setModel("Galaxy S24 Ultra");
-            p2.setPrice(949.00);
-            p2.setOriginalPrice(1299.00);
+            p2.setPrice(94900.00);
+            p2.setOriginalPrice(129900.00);
             p2.setImei("359183028194837");
             p2.setAgeValue(1.0);
             p2.setAgeUnit("months");
@@ -55,8 +59,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p3.setId("PZ-5912");
             p3.setBrand("Google");
             p3.setModel("Pixel 8 Pro");
-            p3.setPrice(699.00);
-            p3.setOriginalPrice(999.00);
+            p3.setPrice(69900.00);
+            p3.setOriginalPrice(99900.00);
             p3.setImei("354829104829104");
             p3.setAgeValue(14.0);
             p3.setAgeUnit("days");
@@ -72,8 +76,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p4.setId("PZ-2948");
             p4.setBrand("Apple");
             p4.setModel("iPhone 14 Pro");
-            p4.setPrice(649.00);
-            p4.setOriginalPrice(899.00);
+            p4.setPrice(64900.00);
+            p4.setOriginalPrice(79900.00);
             p4.setImei("358948194829184");
             p4.setAgeValue(1.5);
             p4.setAgeUnit("years");
@@ -89,8 +93,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p5.setId("PZ-3829");
             p5.setBrand("Samsung");
             p5.setModel("Galaxy S23+");
-            p5.setPrice(499.00);
-            p5.setOriginalPrice(799.00);
+            p5.setPrice(49900.00);
+            p5.setOriginalPrice(69900.00);
             p5.setImei("356829104829381");
             p5.setAgeValue(8.0);
             p5.setAgeUnit("months");
@@ -106,8 +110,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             p6.setId("PZ-1049");
             p6.setBrand("OnePlus");
             p6.setModel("OnePlus 12");
-            p6.setPrice(599.00);
-            p6.setOriginalPrice(799.00);
+            p6.setPrice(59900.00);
+            p6.setOriginalPrice(69900.00);
             p6.setImei("863920194829104");
             p6.setAgeValue(5.0);
             p6.setAgeUnit("months");

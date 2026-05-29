@@ -1,15 +1,15 @@
 package com.phonezone.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "sales")
 public class Sale {
     @Id
-    @Column(length = 50)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
     private String orderId;
 
     @Column(nullable = false, length = 50)
@@ -50,7 +50,18 @@ public class Sale {
     @Column(nullable = false, length = 100)
     private String customerCity;
 
+    @Column(nullable = false, length = 50)
+    private String status = "Pending"; // Pending, Dispatched, In Transit, Delivered
+
     // --- Getters & Setters ---
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getOrderId() {
         return orderId;
@@ -162,5 +173,13 @@ public class Sale {
 
     public void setCustomerCity(String customerCity) {
         this.customerCity = customerCity;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
