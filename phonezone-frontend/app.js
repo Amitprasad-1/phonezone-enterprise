@@ -2,7 +2,7 @@
    PHONEZONE MAIN JAVASCRIPT APPLICATION LOGIC (AJAX & SPRING BOOT MYSQL VERSION)
    ========================================================================== */
 
-const API_BASE_URL = "http://localhost:8080/api/products";
+const API_BASE_URL = "https://phonezone-enterprise.onrender.com/api/products";
 
 // --- Application State ---
 let products = [];
