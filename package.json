@@ -1,0 +1,8 @@
+{
+  "name": "phonezone-enterprise",
+  "version": "1.0.0",
+  "description": "PhoneZone E-Commerce Full-Stack System",
+  "scripts": {
+    "start": "cmd /c start.bat"
+  }
+}

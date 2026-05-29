@@ -1,0 +1,22 @@
+# Maven build files
+**/target/
+**/*.class
+
+# Help files
+help/
+
+# Log files
+*.log
+*.log.*
+
+# IDE Configurations
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Operating System Files
+Thumbs.db
+Desktop.ini
+.DS_Store

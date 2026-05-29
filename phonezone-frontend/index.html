@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhoneZone | Premium Second-Hand & Open-Box Phones</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Link Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-container" id="nav-logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                </div>
+                <span class="logo-text">Phone<span class="logo-highlight">Zone</span></span>
+            </div>
+            
+            <nav class="main-nav">
+                <button class="nav-link active" id="btn-store-view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Store</span>
+                </button>
+                <button class="nav-link" id="btn-admin-view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                    <span>Owner Dashboard</span>
+                    <span class="badge badge-admin-notify" id="admin-badge-count" style="display: none;">0</span>
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <button class="cart-btn" id="btn-cart-view">
+                    <div class="cart-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        <span class="cart-count" id="cart-item-count">0</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-main">
+        
+        <!-- ================= CUSTOMER VIEW ================= -->
+        <section id="customer-view" class="view-section active">
+            <!-- Hero Carousel/Banner -->
+            <div class="hero-carousel">
+                <div class="carousel-track">
+                    <div class="carousel-slide active">
+                        <div class="slide-content">
+                            <span class="slide-label">Premium Open-Box Deals</span>
+                            <h1 class="slide-title">Like New, But Better Pricing</h1>
+                            <p class="slide-description">Get up to 40% off on flagship smartphones with verified IMEIs, warranty remaining, and rigorous 45-point testing completed.</p>
+                            <div class="slide-actions">
+                                <a href="#storefront" class="btn btn-primary">Browse Deals</a>
+                                <a href="#storefront" class="btn btn-outline" onclick="setQuickFilter('seal', 'Open-Box')">View Open-Box Only</a>
+                            </div>
+                        </div>
+                        <div class="slide-image-container">
+                            <div class="glowing-orb"></div>
+                            <img src="assets/images/iphone.png" alt="Featured Device" class="slide-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storefront Section -->
+            <div id="storefront" class="storefront-container">
+                <!-- Filters Sidebar -->
+                <aside class="store-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Filters</h3>
+                        <button class="btn-text" id="btn-clear-filters">Clear All</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="search-input" class="filter-label">Search Phone</label>
+                        <div class="search-box">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="search-input" placeholder="Search by model or IMEI...">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Brand</label>
+                        <div class="checkbox-list" id="filter-brands">
+                            <!-- Brands populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Seal Status</label>
+                        <div class="checkbox-list" id="filter-seals">
+                            <!-- Seal status populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Condition</label>
+                        <div class="checkbox-list" id="filter-conditions">
+                            <!-- Conditions populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="filter-label-row">
+                            <label class="filter-label">Max Price</label>
+                            <span class="filter-value" id="price-slider-value">$2000</span>
+                        </div>
+                        <input type="range" id="price-slider" min="100" max="2000" step="50" value="2000" class="slider">
+                        <div class="range-labels">
+                            <span>$100</span>
+                            <span>$2000</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Products Display Area -->
+                <div class="store-content">
+                    <div class="store-toolbar">
+                        <div class="results-count">
+                            Showing <span id="displayed-products-count">0</span> of <span id="total-products-count">0</span> items
+                        </div>
+                        <div class="sort-selector">
+                            <label for="sort-select">Sort by:</label>
+                            <select id="sort-select" class="form-select">
+                                <option value="featured">Featured Deals</option>
+                                <option value="price-asc">Price: Low to High</option>
+                                <option value="price-desc">Price: High to Low</option>
+                                <option value="age-asc">Newest Device Age</option>
+                                <option value="warranty-desc">Most Warranty Remaining</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid" id="products-grid">
+                        <!-- Product Cards inserted via JS -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="store-empty-state" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        <h3>No Devices Found</h3>
+                        <p>We couldn't find any products matching your specific combination of filters. Try clearing filters or refining your search parameters.</p>
+                        <button class="btn btn-primary" id="btn-reset-store-filters">Clear All Filters</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= OWNER DASHBOARD VIEW ================= -->
+        <section id="admin-view" class="view-section">
+            <div class="dashboard-header-row">
+                <div>
+                    <h1 class="page-title">Shop Owner Dashboard</h1>
+                    <p class="page-subtitle">Manage phone inventory, monitor sales log, and analyze real-time business performance.</p>
+                </div>
+                <button class="btn btn-primary btn-add-listing-trigger" id="btn-toggle-add-form">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Add New Phone Listing</span>
+                </button>
+            </div>
+
+            <!-- Analytics Cards -->
+            <div class="analytics-grid">
+                <div class="analytics-card card-glow-violet">
+                    <div class="analytics-card-header">
+                        <span>Total Revenue</span>
+                        <div class="card-icon violet">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                    </div>
+                    <div class="analytics-value" id="stat-revenue">$0.00</div>
+                    <div class="analytics-trend positive">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        <span>From mock direct sales</span>
+                    </div>
+                </div>
+
+                <div class="analytics-card card-glow-cyan">
+                    <div class="analytics-card-header">
+                        <span>Phones Sold</span>
+                        <div class="card-icon cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        </div>
+                    </div>
+                    <div class="analytics-value" id="stat-sold">0</div>
+                    <div class="analytics-trend positive" id="stat-sold-pct">
+                        <span>Stock updated dynamically</span>
+                    </div>
+                </div>
+
+                <div class="analytics-card card-glow-emerald">
+                    <div class="analytics-card-header">
+                        <span>Active Inventory</span>
+                        <div class="card-icon emerald">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                        </div>
+                    </div>
+                    <div class="analytics-value" id="stat-active">0</div>
+                    <div class="analytics-trend neutral" id="stat-in-stock">
+                        <span>0 in stock, 0 out of stock</span>
+                    </div>
+                </div>
+
+                <div class="analytics-card card-glow-amber">
+                    <div class="analytics-card-header">
+                        <span>Avg Device Value</span>
+                        <div class="card-icon amber">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="analytics-value" id="stat-avg-price">$0</div>
+                    <div class="analytics-trend neutral">
+                        <span>Based on listed phones</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add / Edit Form Panel -->
+            <div class="dashboard-form-panel card-glass" id="product-form-container" style="display: none;">
+                <div class="panel-header">
+                    <h3 id="form-title">Add New Phone Listing</h3>
+                    <button class="btn-close" id="btn-close-form">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <form id="product-form" class="dashboard-form">
+                    <input type="hidden" id="form-product-id">
+                    
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="form-brand">Brand *</label>
+                            <select id="form-brand" required class="form-control">
+                                <option value="" disabled selected>Select Brand</option>
+                                <option value="Apple">Apple</option>
+                                <option value="Samsung">Samsung</option>
+                                <option value="Google">Google</option>
+                                <option value="OnePlus">OnePlus</option>
+                                <option value="Xiaomi">Xiaomi</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-model">Model Name *</label>
+                            <input type="text" id="form-model" required placeholder="e.g. Galaxy S24 Ultra, iPhone 15 Pro" class="form-control">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-price">Price ($) *</label>
+                            <input type="number" id="form-price" required min="1" step="0.01" placeholder="e.g. 849.00" class="form-control">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-original-price">Original MSRP ($) (Optional)</label>
+                            <input type="number" id="form-original-price" min="1" step="0.01" placeholder="e.g. 1199.00" class="form-control">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-imei">IMEI Number *</label>
+                            <input type="text" id="form-imei" required pattern="^[0-9]{15}$" title="IMEI must be exactly 15 digits" placeholder="Enter 15-digit IMEI" class="form-control">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-age">Device Age *</label>
+                            <div class="input-group">
+                                <input type="number" id="form-age-value" required min="0" placeholder="e.g. 3" class="form-control">
+                                <select id="form-age-unit" required class="form-control select-unit">
+                                    <option value="days">Days</option>
+                                    <option value="months" selected>Months</option>
+                                    <option value="years">Years</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-warranty">Warranty Left *</label>
+                            <div class="input-group">
+                                <input type="number" id="form-warranty-value" required min="0" placeholder="e.g. 9" class="form-control">
+                                <select id="form-warranty-unit" required class="form-control select-unit">
+                                    <option value="days">Days</option>
+                                    <option value="months" selected>Months</option>
+                                    <option value="years">Years</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-image-preset">Select Image Asset</label>
+                            <select id="form-image-preset" class="form-control">
+                                <option value="assets/images/iphone.png">iPhone Premium Photo</option>
+                                <option value="assets/images/samsung.png">Samsung Premium Photo</option>
+                                <option value="assets/images/pixel.png">Pixel Premium Photo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-condition">Condition *</label>
+                            <select id="form-condition" required class="form-control">
+                                <option value="Like New">Like New (10/10 - Zero scratches)</option>
+                                <option value="Excellent">Excellent (9/10 - Micro scratches only)</option>
+                                <option value="Good">Good (8/10 - Normal light wear)</option>
+                                <option value="Fair">Fair (7/10 - Visible wear/scuffs)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-seal">Seal Status *</label>
+                            <select id="form-seal" required class="form-control">
+                                <option value="Sealed">Sealed (Brand new, unopened box)</option>
+                                <option value="Open-Box">Open-Box (Box opened, unused device)</option>
+                                <option value="Unsealed">Unsealed (Used, device only / box opened)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-stock">Initial Stock Status *</label>
+                            <select id="form-stock" required class="form-control">
+                                <option value="In Stock">In Stock</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field form-field-full">
+                            <label for="form-description">Product Description & Condition Details *</label>
+                            <textarea id="form-description" required rows="3" placeholder="Specify battery health percentage, screen scratches, box/charger presence..." class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="btn-cancel-form">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-submit-form">Save Product Listing</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabbed tables: Inventory and Sales logs -->
+            <div class="dashboard-tabs-container card-glass">
+                <div class="tabs-header">
+                    <button class="tab-btn active" id="tab-btn-inventory">Inventory Details</button>
+                    <button class="tab-btn" id="tab-btn-sales">Direct Sales Log</button>
+                </div>
+                
+                <div class="tab-content active" id="tab-inventory">
+                    <div class="table-toolbar">
+                        <div class="table-search">
+                            <input type="text" id="inventory-search" placeholder="Search inventory by model, brand, IMEI..." class="form-control">
+                        </div>
+                        <div class="table-filters">
+                            <select id="inventory-filter-stock" class="form-select">
+                                <option value="all">All Stock Statuses</option>
+                                <option value="In Stock">In Stock Only</option>
+                                <option value="Out of Stock">Out of Stock Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Product ID</th>
+                                    <th>Device Details</th>
+                                    <th>IMEI</th>
+                                    <th>Condition</th>
+                                    <th>Seal</th>
+                                    <th>Age / Warranty</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-sales">
+                    <div class="table-responsive">
+                        <table class="dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Sale Date</th>
+                                    <th>Customer Details</th>
+                                    <th>Device Purchased</th>
+                                    <th>IMEI</th>
+                                    <th>Original MSRP</th>
+                                    <th>Sale Price</th>
+                                    <th>Payment Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-table-body">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state sales-empty" id="sales-empty-state" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        <h4>No Mock Sales Recorded Yet</h4>
+                        <p>When customer purchases are executed via the checkout gateway, logs will populate here instantly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= PRODUCT DETAILS MODAL ================= -->
+    <div class="modal-overlay" id="details-modal" style="display: none;">
+        <div class="modal-container modal-large card-glass">
+            <button class="modal-close" id="btn-close-details">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="modal-content-grid">
+                <div class="modal-image-panel">
+                    <div class="detail-glow"></div>
+                    <img src="" alt="Phone Image" id="detail-image" class="detail-product-img">
+                </div>
+                <div class="modal-details-panel">
+                    <div class="detail-header">
+                        <div class="detail-badges">
+                            <span class="badge" id="detail-badge-seal"></span>
+                            <span class="badge" id="detail-badge-condition"></span>
+                        </div>
+                        <h2 class="detail-title" id="detail-title-text">iPhone 15 Pro Max</h2>
+                        <p class="detail-brand" id="detail-brand-text">Brand: Apple</p>
+                    </div>
+
+                    <div class="detail-price-row">
+                        <div class="detail-price-wrapper">
+                            <span class="detail-price" id="detail-price-text">$999.00</span>
+                            <span class="detail-original-price" id="detail-original-price-text">$1,199.00</span>
+                        </div>
+                        <span class="savings-tag" id="detail-savings-text">Save $200 (16% off)</span>
+                    </div>
+
+                    <div class="specs-grid">
+                        <div class="spec-card">
+                            <span class="spec-label">Device Age</span>
+                            <span class="spec-value" id="detail-age-text">3 Months</span>
+                        </div>
+                        <div class="spec-card">
+                            <span class="spec-label">Warranty Status</span>
+                            <span class="spec-value" id="detail-warranty-text">9 Months Left</span>
+                        </div>
+                        <div class="spec-card spec-card-full">
+                            <span class="spec-label">Secured IMEI Number</span>
+                            <div class="imei-display">
+                                <span class="spec-value font-mono" id="detail-imei-text">358291049281749</span>
+                                <span class="badge badge-success">Verified Secure</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-description-section">
+                        <h4>Seller's Notes & Diagnostics</h4>
+                        <p id="detail-desc-text">Device is in absolute mint condition with 100% battery health capacity. Includes original retail box, unused USB-C to USB-C charging cable, and proof of purchase.</p>
+                    </div>
+
+                    <div class="detail-actions">
+                        <div class="stock-status-display" id="detail-stock-status">
+                            <span class="stock-dot dot-success"></span>
+                            <span class="stock-text">In Stock (Ready to Ship)</span>
+                        </div>
+                        <button class="btn btn-primary btn-large btn-checkout-trigger" id="btn-details-checkout">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <span>Buy Directly Now</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SECURE PAYMENT / CHECKOUT MODAL ================= -->
+    <div class="modal-overlay" id="checkout-modal" style="display: none;">
+        <div class="modal-container modal-medium card-glass">
+            <button class="modal-close" id="btn-close-checkout">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <div class="checkout-wrapper">
+                <!-- STEP 1: Billing & Delivery -->
+                <div class="checkout-step-content active" id="checkout-step-1">
+                    <h3 class="checkout-header-title">1. Shipping & Customer Details</h3>
+                    <p class="checkout-header-subtitle">Provide your delivery info to calculate overnight insured shipping (free!).</p>
+                    
+                    <form id="checkout-shipping-form" class="checkout-form">
+                        <div class="form-field">
+                            <label for="chk-name">Full Name *</label>
+                            <input type="text" id="chk-name" required placeholder="John Doe" class="form-control">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="chk-email">Email Address *</label>
+                                <input type="email" id="chk-email" required placeholder="john@example.com" class="form-control">
+                            </div>
+                            <div class="form-field">
+                                <label for="chk-phone">Contact Number *</label>
+                                <input type="tel" id="chk-phone" required placeholder="+1 (555) 000-0000" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="chk-address">Shipping Address *</label>
+                            <input type="text" id="chk-address" required placeholder="Street Address, Apartment, Suite" class="form-control">
+                        </div>
+                        <div class="form-grid-three">
+                            <div class="form-field">
+                                <label for="chk-city">City *</label>
+                                <input type="text" id="chk-city" required placeholder="San Francisco" class="form-control">
+                            </div>
+                            <div class="form-field">
+                                <label for="chk-state">State *</label>
+                                <input type="text" id="chk-state" required placeholder="CA" class="form-control">
+                            </div>
+                            <div class="form-field">
+                                <label for="chk-zip">Zip Code *</label>
+                                <input type="text" id="chk-zip" required pattern="^[0-9]{5}(-[0-9]{4})?$" placeholder="94103" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="checkout-order-summary">
+                            <div class="summary-row">
+                                <span>Item Selected:</span>
+                                <span id="chk-summary-phone">iPhone 15 Pro Max</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Insured Shipping:</span>
+                                <span class="text-success">FREE</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Grand Total:</span>
+                                <span id="chk-summary-total">$999.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>Proceed to Secure Payment</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- STEP 2: Credit Card Payment Gateway -->
+                <div class="checkout-step-content" id="checkout-step-2">
+                    <div class="gateway-header">
+                        <div class="lock-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="checkout-header-title">2. Secure Card Payment</h3>
+                            <p class="checkout-header-subtitle font-mono text-cyan">PhoneZone Secure Gateway v4.2 | AES-256 Encrypted</p>
+                        </div>
+                    </div>
+
+                    <form id="checkout-payment-form" class="checkout-form">
+                        <div class="credit-card-preview card-glass">
+                            <div class="card-chip"></div>
+                            <div class="card-logo-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            </div>
+                            <div class="card-preview-number" id="preview-card-number">•••• •••• •••• ••••</div>
+                            <div class="card-preview-info">
+                                <div>
+                                    <div class="card-preview-label">CARDHOLDER</div>
+                                    <div class="card-preview-val" id="preview-card-name">JOHN DOE</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="card-preview-label">EXPIRES</div>
+                                    <div class="card-preview-val" id="preview-card-expiry">MM/YY</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="pay-name">Cardholder Name *</label>
+                            <input type="text" id="pay-name" required placeholder="Name on Card" class="form-control">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="pay-number">Card Number *</label>
+                            <div class="input-with-icon">
+                                <svg class="input-card-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                <input type="text" id="pay-number" required pattern="^[0-9]{4}\s[0-9]{4}\s[0-9]{4}\s[0-9]{4}$" placeholder="4000 1234 5678 9010" maxlength="19" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="pay-expiry">Expiry Date *</label>
+                                <input type="text" id="pay-expiry" required pattern="^(0[1-9]|1[0-2])\/[0-9]{2}$" placeholder="MM/YY" maxlength="5" class="form-control">
+                            </div>
+                            <div class="form-field">
+                                <label for="pay-cvv">CVV / CVC *</label>
+                                <input type="password" id="pay-cvv" required pattern="^[0-9]{3,4}$" placeholder="•••" maxlength="4" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="payment-disclaimer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <span>Mock checkout environment. Do not enter actual credit card details.</span>
+                        </div>
+
+                        <div class="form-actions-row">
+                            <button type="button" class="btn btn-outline" id="btn-back-to-step-1">Back</button>
+                            <button type="submit" class="btn btn-primary btn-grow" id="btn-submit-payment">
+                                <span>Authorize Payment</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- STEP 3: Gateway Processing Loader -->
+                <div class="checkout-step-content text-center" id="checkout-step-3">
+                    <div class="processing-loader-wrapper">
+                        <div class="payment-spinner"></div>
+                        <div class="lock-glow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                    </div>
+                    <h3 class="loader-status" id="payment-loader-status">Initiating secure session...</h3>
+                    <p class="loader-subtext">Communicating with the card issuer. Please do not close this window or refresh the page.</p>
+                </div>
+
+                <!-- STEP 4: Success Digital Receipt -->
+                <div class="checkout-step-content" id="checkout-step-4">
+                    <div class="success-header text-center">
+                        <div class="success-icon-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <h3>Payment Approved!</h3>
+                        <p class="text-muted">Your order has been logged and queued for overnight dispatch.</p>
+                    </div>
+
+                    <div class="digital-receipt card-glass">
+                        <div class="receipt-cut"></div>
+                        <h4 class="receipt-header">PHONZONE RETAIL CO.</h4>
+                        <p class="receipt-date" id="receipt-date-text">Date: 2026-05-29</p>
+                        
+                        <div class="receipt-divider"></div>
+                        
+                        <div class="receipt-item-row">
+                            <span class="item-name" id="receipt-phone-name">iPhone 15 Pro Max</span>
+                            <span class="item-val" id="receipt-phone-price">$999.00</span>
+                        </div>
+                        <div class="receipt-item-row font-mono text-small">
+                            <span>IMEI Number:</span>
+                            <span id="receipt-phone-imei">358291049281749</span>
+                        </div>
+                        <div class="receipt-item-row font-mono text-small">
+                            <span>Warranty Remaining:</span>
+                            <span id="receipt-phone-warranty">9 Months</span>
+                        </div>
+                        
+                        <div class="receipt-divider"></div>
+                        
+                        <div class="receipt-item-row">
+                            <span>Delivery Service:</span>
+                            <span>Insured Overnight</span>
+                        </div>
+                        <div class="receipt-item-row">
+                            <span>Billing Customer:</span>
+                            <span id="receipt-customer-name">John Doe</span>
+                        </div>
+                        
+                        <div class="receipt-divider"></div>
+                        
+                        <div class="receipt-item-row total">
+                            <span>Amount Billed:</span>
+                            <span id="receipt-grand-total">$999.00</span>
+                        </div>
+                        
+                        <div class="receipt-footer font-mono">
+                            <div>TXID: <span id="receipt-txid">PZ-9281-9481</span></div>
+                            <div class="barcode">||||| | ||||| || |||| |||</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="btn-close-receipt">Back to Store</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- App Logic Script -->
+    <script src="app.js"></script>
+</body>
+</html>
