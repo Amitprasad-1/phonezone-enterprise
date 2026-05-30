@@ -10,4 +10,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, String> {
     // Custom query to find items by stock status (e.g. 'In Stock')
     List<Product> findByStock(String stock);
+
+    // Custom query to locate a device by its unique IMEI
+    Product findByImei(String imei);
 }

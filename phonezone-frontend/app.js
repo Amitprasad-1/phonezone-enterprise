@@ -18,6 +18,7 @@ let activeFilters = {
 let selectedProductForPurchase = null;
 let unseenSalesCount = 0;
 let currentActiveSale = null;
+let currentChartType = 'brand';
 
 // Carousel Gallery State
 let carouselImages = [];
@@ -443,8 +444,13 @@ function renderStorefront() {
             const newBadgeHTML = isJustArrived(product.ageValue, product.ageUnit) ? '<span class="badge badge-new">Just Arrived</span>' : '';
             const displayAge = formatDeviceAge(product.ageValue, product.ageUnit);
             
+            const images = product.image ? product.image.split(",") : ["assets/images/iphone.png"];
+            const mainImg = images[0] || "assets/images/iphone.png";
+            const hoverImg = images.length > 1 ? images[1] : null;
+            const hasHoverClass = hoverImg ? "has-hover-image" : "";
+            
             return `
-                <div class="phone-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}">
+                <div class="phone-card ${isOutOfStock ? 'out-of-stock' : ''} ${hasHoverClass}" data-id="${product.id}">
                     <div class="card-badges">
                         ${isOutOfStock ? '<span class="badge badge-outstock">Sold Out</span>' : ''}
                         ${newBadgeHTML}
@@ -453,7 +459,8 @@ function renderStorefront() {
                     </div>
                     <div class="phone-card-image-box">
                         <div class="card-decor-glow"></div>
-                        <img src="${product.image ? product.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${product.brand} ${product.model}" class="phone-card-img" onerror="this.src='assets/images/iphone.png'">
+                        <img src="${mainImg}" alt="${product.brand} ${product.model}" class="phone-card-img main-img" onerror="this.src='assets/images/iphone.png'">
+                        ${hoverImg ? `<img src="${hoverImg}" alt="${product.brand} ${product.model} Alternative Angle" class="phone-card-img hover-img" onerror="this.style.display='none'">` : ""}
                     </div>
                     <div class="phone-card-details">
                         <div class="phone-meta-row">
@@ -463,6 +470,14 @@ function renderStorefront() {
                         <h3 class="phone-title">${product.model}</h3>
                         
                         <div class="phone-specs-mini">
+                            <div class="spec-line">
+                                <span>Config</span>
+                                <span style="font-weight:600;">${product.ram}GB / ${product.rom >= 1024 ? `${(product.rom/1024).toFixed(0)}TB` : `${product.rom}GB`}</span>
+                            </div>
+                            <div class="spec-line">
+                                <span>Battery Health</span>
+                                <span>🔋 ${product.batteryHealth}%</span>
+                            </div>
                             <div class="spec-line">
                                 <span>IMEI Checked</span>
                                 <span class="font-mono">...${product.imei.slice(-5)}</span>
@@ -534,7 +549,7 @@ function renderDashboard() {
                         <img src="${p.image ? p.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${p.model}" class="table-device-thumb" onerror="this.src='assets/images/iphone.png'">
                         <div>
                             <div class="device-name-bold">${p.model}</div>
-                            <div class="device-sub-brand">${p.brand}</div>
+                            <div class="device-sub-brand">${p.brand} • ${p.ram}GB/${p.rom >= 1024 ? `${(p.rom/1024).toFixed(0)}TB` : `${p.rom}GB`} • 🔋${p.batteryHealth}%</div>
                         </div>
                     </div>
                 </td>
@@ -629,7 +644,142 @@ function renderDashboard() {
             `;
         }).join("");
     }
+
+    // Render Dashboard Charts
+    renderDashboardCharts(currentChartType);
 }
+
+function renderDashboardCharts(type) {
+    currentChartType = type;
+    const container = document.getElementById("dashboard-svg-chart-container");
+    const legend = document.getElementById("dashboard-chart-legend");
+    if (!container || !legend) return;
+
+    // Update active button state
+    const btnBrand = document.getElementById("btn-chart-brand");
+    const btnCondition = document.getElementById("btn-chart-condition");
+    if (btnBrand && btnCondition) {
+        if (type === 'brand') {
+            btnBrand.classList.add("active");
+            btnCondition.classList.remove("active");
+        } else {
+            btnBrand.classList.remove("active");
+            btnCondition.classList.add("active");
+        }
+    }
+
+    // Process data
+    let dataMap = {};
+    let colors = [];
+    
+    // Theme-compatible colors
+    const brandColors = {
+        "Apple": "#8b5cf6", // Violet
+        "Samsung": "#06b6d4", // Cyan
+        "Google": "#10b981", // Emerald
+        "OnePlus": "#f59e0b", // Amber
+        "Xiaomi": "#ef4444"   // Red
+    };
+
+    const conditionColors = {
+        "Like New": "#06b6d4",
+        "Excellent": "#8b5cf6",
+        "Good": "#10b981",
+        "Fair": "#ef4444"
+    };
+
+    const isLightMode = document.body.classList.contains("light-mode");
+    const defaultColor = isLightMode ? "#475569" : "#94a3b8";
+
+    if (type === 'brand') {
+        products.forEach(p => {
+            dataMap[p.brand] = (dataMap[p.brand] || 0) + 1;
+        });
+        colors = brandColors;
+    } else {
+        products.forEach(p => {
+            const cond = p.condition || p.phoneCondition;
+            if (cond) {
+                dataMap[cond] = (dataMap[cond] || 0) + 1;
+            }
+        });
+        colors = conditionColors;
+    }
+
+    const data = Object.keys(dataMap).map(key => ({
+        name: key,
+        value: dataMap[key],
+        color: colors[key] || defaultColor
+    })).sort((a, b) => b.value - a.value);
+
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    if (total === 0) {
+        container.innerHTML = `<span style="color:var(--text-muted); font-size:13px;">No inventory data to graph.</span>`;
+        legend.innerHTML = "";
+        return;
+    }
+
+    // Draw Donut Chart SVG
+    const radius = 70;
+    const strokeWidth = 16;
+    const cx = 100;
+    const cy = 100;
+    const circumference = 2 * Math.PI * radius; // ~439.82
+
+    let accumulatedPercentage = 0;
+    let svgCircles = "";
+
+    data.forEach((item, index) => {
+        const percentage = (item.value / total) * 100;
+        const strokeDashArray = `${(percentage / 100) * circumference} ${circumference}`;
+        const strokeDashOffset = -((accumulatedPercentage / 100) * circumference);
+        accumulatedPercentage += percentage;
+
+        svgCircles += `
+            <circle cx="${cx}" cy="${cy}" r="${radius}"
+                fill="transparent"
+                stroke="${item.color}"
+                stroke-width="${strokeWidth}"
+                stroke-dasharray="${strokeDashArray}"
+                stroke-dashoffset="${strokeDashOffset}"
+                transform="rotate(-90 ${cx} ${cy})"
+                style="transition: stroke-dashoffset 0.6s ease-in-out, stroke-width 0.3s ease; cursor: pointer;"
+                onmouseover="this.setAttribute('stroke-width', '20')"
+                onmouseout="this.setAttribute('stroke-width', '${strokeWidth}')">
+                <title>${item.name}: ${item.value} (${percentage.toFixed(1)}%)</title>
+            </circle>
+        `;
+    });
+
+    const textColor = isLightMode ? "#0f172a" : "#ffffff";
+    const subTextColor = isLightMode ? "#64748b" : "#94a3b8";
+
+    container.innerHTML = `
+        <svg width="200" height="200" viewBox="0 0 200 200" style="filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));">
+            ${svgCircles}
+            <!-- Donut hole text -->
+            <text x="${cx}" y="${cy - 5}" text-anchor="middle" dominant-baseline="middle" fill="${subTextColor}" font-size="11" font-weight="600" font-family="var(--font-body)">TOTAL</text>
+            <text x="${cx}" y="${cy + 15}" text-anchor="middle" dominant-baseline="middle" fill="${textColor}" font-size="22" font-weight="800" font-family="var(--font-heading)">${total}</text>
+        </svg>
+    `;
+
+    // Render Legend
+    legend.innerHTML = data.map(item => {
+        const pct = ((item.value / total) * 100).toFixed(1);
+        return `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: ${isLightMode ? '#f8fafc' : 'rgba(255, 255, 255, 0.015)'}; border: 1px solid ${isLightMode ? 'rgba(15, 23, 42, 0.05)' : 'var(--border-glass)'}; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: ${item.color}; display: inline-block; box-shadow: 0 0 6px ${item.color};"></span>
+                    <span style="font-size: 13px; font-weight: 600; color: ${isLightMode ? '#0f172a' : '#ffffff'};">${item.name}</span>
+                </div>
+                <span style="font-size: 13px; font-weight: 700; color: var(--color-cyan);">${item.value} <span style="font-size: 11px; font-weight: 500; color: var(--text-muted); margin-left: 4px;">(${pct}%)</span></span>
+            </div>
+        `;
+    }).join("");
+}
+
+window.renderDashboardCharts = renderDashboardCharts;
 
 // --- Customer View Event Handlers ---
 window.handleFilterChange = function(element, filterCategory) {
@@ -742,6 +892,8 @@ window.openDetailsModal = function(productId) {
     const isNew = isJustArrived(product.ageValue, product.ageUnit);
     document.getElementById("detail-age-text").innerText = formatDeviceAge(product.ageValue, product.ageUnit) + (isNew ? " (Just Arrived)" : "");
     document.getElementById("detail-warranty-text").innerText = product.warrantyValue > 0 ? `${product.warrantyValue} ${product.warrantyUnit} remaining` : "Expired / No Warranty";
+    document.getElementById("detail-ram-rom-text").innerText = `${product.ram}GB / ${product.rom >= 1024 ? `${(product.rom/1024).toFixed(0)}TB` : `${product.rom}GB`}`;
+    document.getElementById("detail-battery-health-text").innerText = `🔋 ${product.batteryHealth}%`;
     document.getElementById("detail-imei-text").innerText = maskIMEI(product.imei);
     document.getElementById("detail-desc-text").innerText = product.description;
 
@@ -884,6 +1036,9 @@ window.triggerEditForm = function(productId) {
     document.getElementById("form-age-unit").value = product.ageUnit;
     document.getElementById("form-warranty-value").value = product.warrantyValue;
     document.getElementById("form-warranty-unit").value = product.warrantyUnit;
+    document.getElementById("form-ram").value = product.ram || "";
+    document.getElementById("form-rom").value = product.rom || "";
+    document.getElementById("form-battery-health").value = product.batteryHealth || "";
     
     const isPreset = product.image && product.image.startsWith("assets/");
     if (isPreset) {
@@ -1214,14 +1369,57 @@ window.toggleImageUploadMode = function(mode) {
     }
 };
 
+function compressImage(file, maxWidth = 900, maxHeight = 900, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                
+                // Maintain aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+                
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+                resolve(compressedBase64);
+            };
+            img.onerror = (err) => reject(err);
+            img.src = e.target.result;
+        };
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+    });
+}
+
 function readImagesAsBase64(files) {
     const promises = Array.from(files).map(file => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(file);
-        });
+        if (file.type.startsWith("image/")) {
+            return compressImage(file, 900, 900, 0.7);
+        } else {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
     });
     return Promise.all(promises);
 }
@@ -1384,6 +1582,16 @@ function bindEvents() {
         renderStorefront();
         toast("Filters reset successfully.", "info");
     });
+
+    // Chart toggle buttons
+    const btnChartBrand = document.getElementById("btn-chart-brand");
+    const btnChartCondition = document.getElementById("btn-chart-condition");
+    if (btnChartBrand) {
+        btnChartBrand.addEventListener("click", () => renderDashboardCharts("brand"));
+    }
+    if (btnChartCondition) {
+        btnChartCondition.addEventListener("click", () => renderDashboardCharts("condition"));
+    }
 
     // Search input
     document.getElementById("search-input").addEventListener("input", (e) => {
@@ -1698,6 +1906,14 @@ function bindEvents() {
         const seal = document.getElementById("form-seal").value;
         const stock = document.getElementById("form-stock").value;
         const description = document.getElementById("form-description").value;
+        const ram = parseInt(document.getElementById("form-ram").value);
+        const rom = parseInt(document.getElementById("form-rom").value);
+        const batteryHealth = parseInt(document.getElementById("form-battery-health").value);
+
+        if (originalPrice && originalPrice < price) {
+            toast("Original MSRP price cannot be less than the listed selling price.", "warning");
+            return;
+        }
 
         // Perform edit vs add
         const productId = productIdVal || `PZ-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1737,7 +1953,10 @@ function bindEvents() {
                 seal,
                 image,
                 stock,
-                description
+                description,
+                ram,
+                rom,
+                batteryHealth
             };
 
             // Submit to Spring Boot API
@@ -1749,8 +1968,24 @@ function bindEvents() {
                 },
                 body: JSON.stringify(productPayload)
             })
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to save product listing");
+            .then(async res => {
+                if (!res.ok) {
+                    let errMsg = "Failed to save product listing";
+                    try {
+                        const errData = await res.json();
+                        if (errData && errData.error) {
+                            errMsg = errData.error;
+                        } else if (errData && errData.message) {
+                            errMsg = errData.message;
+                        }
+                    } catch (e) {
+                        try {
+                            const txt = await res.text();
+                            if (txt) errMsg = txt;
+                        } catch (e2) {}
+                    }
+                    throw new Error(errMsg);
+                }
                 return res.json();
             })
             .then(savedProduct => {
@@ -1771,7 +2006,7 @@ function bindEvents() {
             })
             .catch(err => {
                 console.error(err);
-                toast("Failed to save phone listing to backend.", "danger");
+                toast(`Failed to save phone listing: ${err.message}`, "danger");
             });
         }).catch(err => {
             console.error(err);

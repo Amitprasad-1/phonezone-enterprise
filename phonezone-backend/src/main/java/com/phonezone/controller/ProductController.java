@@ -36,10 +36,23 @@ public class ProductController {
         return productRepository.findByStock("In Stock");
     }
 
-    // 3. Add or update a product listing
+    // 3. Add or update a product listing with duplicate IMEI check
     @PostMapping
-    public Product saveProduct(@RequestBody Product product) {
-        return productRepository.save(product);
+    public ResponseEntity<?> saveProduct(@RequestBody Product product) {
+        boolean isNew = !productRepository.existsById(product.getId());
+        Product existingWithImei = productRepository.findByImei(product.getImei());
+
+        if (existingWithImei != null) {
+            if (isNew || !existingWithImei.getId().equals(product.getId())) {
+                java.util.Map<String, String> errorMap = new java.util.HashMap<>();
+                errorMap.put("error", "Duplicate IMEI Guard: IMEI " + product.getImei() + " is already registered to " + 
+                            existingWithImei.getBrand() + " " + existingWithImei.getModel() + " (" + existingWithImei.getId() + ").");
+                return ResponseEntity.badRequest().body(errorMap);
+            }
+        }
+
+        Product saved = productRepository.save(product);
+        return ResponseEntity.ok(saved);
     }
 
     // 4. Delete a product listing
@@ -174,4 +187,21 @@ public class ProductController {
 
         return ResponseEntity.ok(sales);
     }
+
+    // Exception Handler to return exact server errors to the frontend
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleException(Exception e) {
+        e.printStackTrace();
+        java.io.StringWriter sw = new java.io.StringWriter();
+        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString();
+        
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("error", "Internal Server Error: " + e.getMessage());
+        response.put("message", e.getMessage());
+        response.put("trace", stackTrace);
+        return ResponseEntity.status(500).body(response);
+    }
 }
+

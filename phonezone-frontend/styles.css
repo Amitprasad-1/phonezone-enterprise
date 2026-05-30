@@ -715,19 +715,27 @@ button {
 
 .phone-card {
     background: var(--bg-surface);
-    border: 1px solid var(--border-glass);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--border-radius-md);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
     transition: var(--transition-bounce);
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.35), 
+        0 0 0 1px rgba(6, 182, 212, 0.04), 
+        0 0 12px rgba(139, 92, 246, 0.03);
 }
 
 .phone-card:hover {
     transform: translateY(-8px);
-    border-color: rgba(139, 92, 246, 0.25);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.08);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 
+        0 20px 38px rgba(0, 0, 0, 0.55), 
+        0 0 0 1.5px rgba(6, 182, 212, 0.45), 
+        0 0 15px rgba(6, 182, 212, 0.25), 
+        0 0 30px rgba(139, 92, 246, 0.25);
 }
 
 .phone-card-image-box {
@@ -762,13 +770,35 @@ button {
 .phone-card-img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the container, cropping where necessary */
+    object-fit: contain; /* Contain the product photo inside the card box to prevent cropping */
     z-index: 1;
-    transition: var(--transition-bounce);
+    transition: opacity 0.4s ease, transform var(--transition-bounce);
     filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
 }
 
-.phone-card:hover .phone-card-img {
+.phone-card-img.hover-img {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+    opacity: 0;
+    z-index: 2;
+}
+
+/* Card hover effects when multiple images exist */
+.phone-card.has-hover-image:hover .phone-card-img.main-img {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.phone-card.has-hover-image:hover .phone-card-img.hover-img {
+    opacity: 1;
+    transform: scale(1.06) rotate(1deg);
+}
+
+/* Default card hover effect when single image exists */
+.phone-card:not(.has-hover-image):hover .phone-card-img.main-img {
     transform: scale(1.06) rotate(1deg);
 }
 
@@ -959,6 +989,12 @@ button {
     gap: 4px;
     margin-bottom: 15px;
     color: var(--text-secondary);
+    transition: var(--transition-smooth);
+}
+
+.phone-card:hover .phone-specs-mini {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .spec-line {
@@ -1592,7 +1628,7 @@ textarea.form-control {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 24px;
     position: relative;
     border-right: 1px solid var(--border-glass);
 }
@@ -1618,7 +1654,7 @@ textarea.form-control {
 .detail-gallery-carousel {
     position: relative;
     width: 100%;
-    height: 320px;
+    height: 380px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1644,10 +1680,11 @@ textarea.form-control {
 }
 
 .carousel-slide-item img {
-    max-height: 280px;
-    max-width: 100%;
+    max-height: 345px;
+    max-width: 95%;
     object-fit: contain;
-    filter: drop-shadow(0 15px 35px rgba(0,0,0,0.6));
+    border-radius: 16px;
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.45));
     animation: floatPhone 6s infinite ease-in-out;
 }
 
@@ -1725,7 +1762,7 @@ textarea.form-control {
 }
 
 .detail-header {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .detail-badges {
@@ -1751,8 +1788,8 @@ textarea.form-control {
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.04);
     border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 25px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2930,17 +2967,30 @@ body:not(.light-mode) .theme-toggle-btn .moon-icon {
 body.light-mode .phone-card {
     background: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.03);
+    box-shadow: 
+        0 8px 24px rgba(15, 23, 42, 0.04), 
+        0 0 0 1px rgba(6, 182, 212, 0.03), 
+        0 0 10px rgba(124, 58, 237, 0.03);
 }
 
 body.light-mode .phone-card:hover {
-    border-color: rgba(124, 58, 237, 0.35);
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06), 0 0 20px rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.4);
+    box-shadow: 
+        0 20px 40px rgba(15, 23, 42, 0.08), 
+        0 0 0 1.5px rgba(124, 58, 237, 0.35), 
+        0 0 12px rgba(124, 58, 237, 0.2), 
+        0 0 25px rgba(6, 182, 212, 0.15);
 }
 
 body.light-mode .phone-specs-mini {
     background: #f8fafc;
     border-color: rgba(15, 23, 42, 0.06);
+    transition: var(--transition-smooth);
+}
+
+body.light-mode .phone-card:hover .phone-specs-mini {
+    background: #f1f5f9;
+    border-color: rgba(15, 23, 42, 0.1);
 }
 
 body.light-mode .spec-line span:last-child {
@@ -3974,3 +4024,26 @@ body.light-mode .tracking-consignment-box {
 body.light-mode .consignment-title {
     color: #0f172a !important;
 }
+
+body.light-mode .dashboard-charts-panel {
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03) !important;
+}
+
+body.light-mode .chart-header-title {
+    color: #0f172a !important;
+}
+
+body.light-mode .chart-toggle-btn {
+    border-color: rgba(15, 23, 42, 0.15) !important;
+    color: #475569 !important;
+    background: #ffffff !important;
+}
+
+body.light-mode .chart-toggle-btn.active {
+    color: white !important;
+    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
+    border-color: transparent !important;
+}
+

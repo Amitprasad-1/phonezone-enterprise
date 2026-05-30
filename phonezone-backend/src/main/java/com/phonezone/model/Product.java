@@ -53,6 +53,15 @@ public class Product {
     @Column(nullable = false, length = 30)
     private String stock; // 'In Stock' or 'Out of Stock'
 
+    @Column(nullable = false)
+    private Integer ram;
+
+    @Column(nullable = false)
+    private Integer rom;
+
+    @Column(name = "battery_health", nullable = false)
+    private Integer batteryHealth;
+
     // --- Getters & Setters ---
 
     public String getId() {
@@ -174,4 +183,29 @@ public class Product {
     public void setStock(String stock) {
         this.stock = stock;
     }
+
+    public Integer getRam() {
+        return ram;
+    }
+
+    public void setRam(Integer ram) {
+        this.ram = ram;
+    }
+
+    public Integer getRom() {
+        return rom;
+    }
+
+    public void setRom(Integer rom) {
+        this.rom = rom;
+    }
+
+    public Integer getBatteryHealth() {
+        return batteryHealth;
+    }
+
+    public void setBatteryHealth(Integer batteryHealth) {
+        this.batteryHealth = batteryHealth;
+    }
 }
+

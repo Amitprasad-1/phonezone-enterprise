@@ -362,6 +362,30 @@
                 </div>
             </div>
 
+            <!-- Dashboard Charts / Analytics Panel -->
+            <div class="dashboard-charts-panel card-glass" style="margin-top: 25px; padding: 25px; margin-bottom: 25px;">
+                <div class="panel-header" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 class="chart-header-title" style="font-size: 18px; font-weight: 700; color: white;">Sales Performance & Brand Share</h3>
+                        <p style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">Visualizing inventory composition and sale performance statistics.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-outline chart-toggle-btn active" id="btn-chart-brand" style="padding: 6px 12px; font-size: 11px;">Brand Share</button>
+                        <button type="button" class="btn btn-outline chart-toggle-btn" id="btn-chart-condition" style="padding: 6px 12px; font-size: 11px;">Condition Share</button>
+                    </div>
+                </div>
+                <div class="chart-content-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: center;">
+                    <!-- SVG Chart Container -->
+                    <div id="dashboard-svg-chart-container" style="width: 100%; height: 260px; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <!-- SVG graph will be rendered dynamically by JS -->
+                    </div>
+                    <!-- Legend Details -->
+                    <div id="dashboard-chart-legend" style="display: flex; flex-direction: column; gap: 12px; max-height: 260px; overflow-y: auto; padding-right: 10px; width: 100%;">
+                        <!-- Legend entries rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Add / Edit Form Panel -->
             <div class="dashboard-form-panel card-glass" id="product-form-container" style="display: none;">
                 <div class="panel-header">
@@ -428,6 +452,40 @@
                                     <option value="years">Years</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-ram">RAM (GB) *</label>
+                            <select id="form-ram" required class="form-control">
+                                <option value="" disabled selected>Select RAM</option>
+                                <option value="2">2 GB</option>
+                                <option value="3">3 GB</option>
+                                <option value="4">4 GB</option>
+                                <option value="6">6 GB</option>
+                                <option value="8">8 GB</option>
+                                <option value="12">12 GB</option>
+                                <option value="16">16 GB</option>
+                                <option value="24">24 GB</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-rom">ROM / Storage (GB) *</label>
+                            <select id="form-rom" required class="form-control">
+                                <option value="" disabled selected>Select Storage</option>
+                                <option value="16">16 GB</option>
+                                <option value="32">32 GB</option>
+                                <option value="64">64 GB</option>
+                                <option value="128">128 GB</option>
+                                <option value="256">256 GB</option>
+                                <option value="512">512 GB</option>
+                                <option value="1024">1 TB (1024 GB)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-battery-health">Battery Health (%) *</label>
+                            <input type="number" id="form-battery-health" required min="50" max="100" placeholder="e.g. 98" class="form-control">
                         </div>
 
                         <div class="form-field">
@@ -624,6 +682,14 @@
                         <div class="spec-card">
                             <span class="spec-label">Warranty Status</span>
                             <span class="spec-value" id="detail-warranty-text">9 Months Left</span>
+                        </div>
+                        <div class="spec-card">
+                            <span class="spec-label">RAM / Storage</span>
+                            <span class="spec-value" id="detail-ram-rom-text">8GB / 256GB</span>
+                        </div>
+                        <div class="spec-card">
+                            <span class="spec-label">Battery Health</span>
+                            <span class="spec-value" id="detail-battery-health-text">🔋 98%</span>
                         </div>
                         <div class="spec-card spec-card-full">
                             <span class="spec-label">Secured IMEI Number</span>
