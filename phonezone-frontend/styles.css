@@ -61,20 +61,44 @@ body {
 }
 
 /* Custom Scrollbar */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) var(--bg-dark);
+}
+body.light-mode {
+    scrollbar-color: rgba(15, 23, 42, 0.25) #f1f5f9;
+}
+
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
 }
 ::-webkit-scrollbar-track {
     background: var(--bg-dark);
+    transition: background 0.3s ease;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--bg-dark);
+    border-radius: 5px;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cyan);
+}
+
+/* Light Mode Scrollbar Overrides */
+body.light-mode ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+body.light-mode ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.25);
+    border-color: #f1f5f9;
+}
+body.light-mode ::-webkit-scrollbar-thumb:hover {
     background: var(--color-violet);
 }
+
 
 /* Common Typography & Links */
 h1, h2, h3, h4, h5, h6 {
