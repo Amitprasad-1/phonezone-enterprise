@@ -42,10 +42,11 @@ public class ApiKeyFilter implements Filter {
         if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
             String uri = httpRequest.getRequestURI();
             
-            // Allow public checkouts, but guard status updates and inventory writes
+            // Allow public checkouts and public review submissions, but guard status updates and inventory writes
             boolean isPublicPurchase = uri.contains("/api/products/purchase") && !uri.contains("/api/products/purchase/status");
+            boolean isPublicReviewSubmit = uri.contains("/api/reviews");
             
-            if (!isPublicPurchase) {
+            if (!isPublicPurchase && !isPublicReviewSubmit) {
                 String clientKey = httpRequest.getHeader("X-API-KEY");
                 
                 if (clientKey == null || !clientKey.equals(apiKey)) {

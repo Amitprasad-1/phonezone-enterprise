@@ -1,7 +1,10 @@
 package com.phonezone.config;
 
 import com.phonezone.model.Product;
+import com.phonezone.model.Review;
+import com.phonezone.model.Sale;
 import com.phonezone.repository.ProductRepository;
+import com.phonezone.repository.ReviewRepository;
 import com.phonezone.repository.SaleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -18,6 +21,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Autowired
     private SaleRepository saleRepository;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -84,6 +90,134 @@ public class DatabaseSeeder implements CommandLineRunner {
             list.add(createProduct("PZ-1054", "Xiaomi", "Redmi Note 11 Pro", 11900.0, 21900.0, "864720194829110", 2.8, "years", 0.0, "months", "Fair", "Unsealed", "assets/images/pixel.png", "In Stock", "Polar White, 128GB. Solid backup phone. Minor scuffs on plastic frame sides. Screen has a tiny chip in top-right corner. Battery at 79%", 6, 128, 79));
             productRepository.saveAll(list);
             System.out.println(">>> Database seeder completed. " + list.size() + " phones populated in products table.");
+        }
+
+        // Seed reviews if table is empty
+        if (reviewRepository.count() == 0) {
+            System.out.println(">>> Seeding mock sales and reviews for verified customer trust wall...");
+            
+            // 1. Seed corresponding sales so the Order ID lookup & verified checks works
+            List<Sale> seededSales = new ArrayList<>();
+            
+            // Aarav Mehta - iPhone 15 Pro Max
+            Sale sale1 = new Sale();
+            sale1.setOrderId("PZ-ORD-100201");
+            sale1.setTxId("TX-99882211");
+            sale1.setTimestamp(System.currentTimeMillis() - 4 * 24 * 3600 * 1000L);
+            sale1.setProductId("PZ-1000");
+            sale1.setBrand("Apple");
+            sale1.setModel("iPhone 15 Pro Max");
+            sale1.setImei("358291049281701");
+            sale1.setOriginalPrice(159900.0);
+            sale1.setPricePaid(109900.0);
+            sale1.setWarrantyLeft("10 months");
+            sale1.setCustomerName("Aarav Mehta");
+            sale1.setCustomerEmail("aarav.mehta@gmail.com");
+            sale1.setCustomerAddress("Flat 402, Sky Heights");
+            sale1.setCustomerCity("Mumbai");
+            sale1.setStatus("Delivered");
+            seededSales.add(sale1);
+
+            // Priya Sharma - Galaxy S24 Ultra
+            Sale sale2 = new Sale();
+            sale2.setOrderId("PZ-ORD-100202");
+            sale2.setTxId("TX-99882212");
+            sale2.setTimestamp(System.currentTimeMillis() - 3 * 24 * 3600 * 1000L);
+            sale2.setProductId("PZ-1012");
+            sale2.setBrand("Samsung");
+            sale2.setModel("Galaxy S24 Ultra");
+            sale2.setImei("359183028194701");
+            sale2.setOriginalPrice(134900.0);
+            sale2.setPricePaid(99900.0);
+            sale2.setWarrantyLeft("11 months");
+            sale2.setCustomerName("Priya Sharma");
+            sale2.setCustomerEmail("priya.sharma@yahoo.com");
+            sale2.setCustomerAddress("Building A, Palm Meadows");
+            sale2.setCustomerCity("Bengaluru");
+            sale2.setStatus("Delivered");
+            seededSales.add(sale2);
+
+            // Amit Patel - Pixel 8 Pro
+            Sale sale3 = new Sale();
+            sale3.setOrderId("PZ-ORD-100203");
+            sale3.setTxId("TX-99882213");
+            sale3.setTimestamp(System.currentTimeMillis() - 2 * 24 * 3600 * 1000L);
+            sale3.setProductId("PZ-1024");
+            sale3.setBrand("Google");
+            sale3.setModel("Pixel 8 Pro");
+            sale3.setImei("354829104829701");
+            sale3.setOriginalPrice(99900.0);
+            sale3.setPricePaid(68900.0);
+            sale3.setWarrantyLeft("11 months");
+            sale3.setCustomerName("Amit Patel");
+            sale3.setCustomerEmail("amit.patel@outlook.com");
+            sale3.setCustomerAddress("12-B, Orchid Enclave");
+            sale3.setCustomerCity("Delhi");
+            sale3.setStatus("Delivered");
+            seededSales.add(sale3);
+
+            // Sneha Reddy - OnePlus 12
+            Sale sale4 = new Sale();
+            sale4.setOrderId("PZ-ORD-100204");
+            sale4.setTxId("TX-99882214");
+            sale4.setTimestamp(System.currentTimeMillis() - 1 * 24 * 3600 * 1000L);
+            sale4.setProductId("PZ-1035");
+            sale4.setBrand("OnePlus");
+            sale4.setModel("OnePlus 12");
+            sale4.setImei("863920194829101");
+            sale4.setOriginalPrice(64900.0);
+            sale4.setPricePaid(58900.0);
+            sale4.setWarrantyLeft("9 months");
+            sale4.setCustomerName("Sneha Reddy");
+            sale4.setCustomerEmail("sneha.reddy@gmail.com");
+            sale4.setCustomerAddress("Plot 55, Road No 4");
+            sale4.setCustomerCity("Hyderabad");
+            sale4.setStatus("Dispatched");
+            seededSales.add(sale4);
+
+            saleRepository.saveAll(seededSales);
+
+            // 2. Seed corresponding reviews
+            List<Review> seededReviews = new ArrayList<>();
+
+            Review r1 = new Review();
+            r1.setOrderId("PZ-ORD-100201");
+            r1.setCustomerName("Aarav Mehta");
+            r1.setCustomerEmail("aarav.mehta@gmail.com");
+            r1.setBrandName("Apple");
+            r1.setModelName("iPhone 15 Pro Max");
+            r1.setRating(5);
+            r1.setTitle("Pristine open-box condition!");
+            r1.setComment("I was skeptical about buying an open-box iPhone online, but PhoneZone exceeded expectations. The device arrived in titanium black, and it literally looks brand new with 100% battery health. Saved 50k from retail price!");
+            r1.setTimestamp(System.currentTimeMillis() - 3 * 24 * 3600 * 1000L);
+            seededReviews.add(r1);
+
+            Review r2 = new Review();
+            r2.setOrderId("PZ-ORD-100202");
+            r2.setCustomerName("Priya Sharma");
+            r2.setCustomerEmail("priya.sharma@yahoo.com");
+            r2.setBrandName("Samsung");
+            r2.setModelName("Galaxy S24 Ultra");
+            r2.setRating(5);
+            r2.setTitle("Absolute Powerhouse & Flawless");
+            r2.setComment("Device is in perfect 'Like New' condition as described. Screen had no marks, S-Pen was inside and worked perfectly. The 45-point testing report was included and gives great peace of mind. Delivery was overnight!");
+            r2.setTimestamp(System.currentTimeMillis() - 2 * 24 * 3600 * 1000L);
+            seededReviews.add(r2);
+
+            Review r3 = new Review();
+            r3.setOrderId("PZ-ORD-100203");
+            r3.setCustomerName("Amit Patel");
+            r3.setCustomerEmail("amit.patel@outlook.com");
+            r3.setBrandName("Google");
+            r3.setModelName("Pixel 8 Pro");
+            r3.setRating(4);
+            r3.setTitle("Fantastic AI cameras, minor wear");
+            r3.setComment("Got the obsidian black Pixel 8 Pro. Phone performs wonderfully and cameras are incredible. The bioplastic visor had a microscopic hairline scratch which is only visible under direct light, but overall condition is excellent for the discount.");
+            r3.setTimestamp(System.currentTimeMillis() - 1 * 24 * 3600 * 1000L);
+            seededReviews.add(r3);
+
+            reviewRepository.saveAll(seededReviews);
+            System.out.println(">>> Database seeder populated mock sales and customer reviews successfully.");
         }
     }
 

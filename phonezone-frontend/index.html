@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Link Stylesheet -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.0.4">
 </head>
 <body>
 
@@ -31,6 +31,14 @@
                 <button class="nav-link active" id="btn-store-view">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                     <span>Store</span>
+                </button>
+                <button class="nav-link" id="btn-nav-reviews">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Reviews</span>
+                </button>
+                <button class="nav-link" id="btn-nav-tracking">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Track Order</span>
                 </button>
                 <button class="nav-link" id="btn-admin-view">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
@@ -193,8 +201,75 @@
                 </div>
             </div>
 
+            <!-- ================= CUSTOMER REVIEWS (TRANSPARENCY WALL) ================= -->
+            <div id="transparency-wall" class="reviews-section card-glass" style="margin-top: 30px;">
+                <div class="reviews-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="reviews-icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Wall of Transparency (Updated)
+                    </h2>
+                    <p>Read honest, certified feedback from verified PhoneZone customers. Every single review represents an authenticated purchase.</p>
+                </div>
+
+                <div class="reviews-grid-container">
+                    <!-- Left: Rating Summary Card -->
+                    <div class="reviews-summary-card">
+                        <div class="rating-overall-box">
+                            <span class="rating-overall-score" id="reviews-avg-rating">0.0</span>
+                            <div class="rating-overall-stars-wrapper">
+                                <div class="rating-stars" id="reviews-summary-stars">
+                                    <!-- Filled stars populated by JS -->
+                                </div>
+                                <span class="rating-overall-count-label"><span id="reviews-total-count">0</span> verified reviews</span>
+                            </div>
+                        </div>
+
+                        <!-- Rating breakdown progress bars -->
+                        <div class="rating-breakdown-container" id="reviews-rating-bars">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <button class="btn btn-primary btn-block" id="btn-trigger-review-modal" style="margin-top: 15px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                            <span>Write a Verified Review</span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Reviews List, Filters & Search -->
+                    <div class="reviews-list-container">
+                        <!-- Filters and Search toolbar for reviews -->
+                        <div class="reviews-toolbar">
+                            <div class="reviews-search-box">
+                                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="reviews-search-input" placeholder="Search reviews by model or keywords...">
+                            </div>
+                            <div class="reviews-rating-filter-pills" id="reviews-rating-filters">
+                                <button class="filter-pill active" data-rating="all">All</button>
+                                <button class="filter-pill" data-rating="5">5 ★</button>
+                                <button class="filter-pill" data-rating="4">4 ★</button>
+                                <button class="filter-pill" data-rating="3">3 ★</button>
+                                <button class="filter-pill" data-rating="2">2 ★</button>
+                                <button class="filter-pill" data-rating="1">1 ★</button>
+                            </div>
+                        </div>
+
+                        <!-- Review Cards Grid -->
+                        <div class="reviews-cards-grid" id="reviews-cards-grid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <!-- Empty state inside reviews wall -->
+                        <div class="empty-state reviews-empty" id="reviews-empty-state" style="display: none; padding: 30px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <h4>No matching reviews found</h4>
+                            <p>Try clearing your review search or selecting a different rating filter.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ================= ORDER TRACKING PANEL ================= -->
-            <div class="order-tracking-section card-glass">
+            <div id="order-tracking-section" class="order-tracking-section card-glass">
                 <div class="tracking-header">
                     <h2>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tracking-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -276,6 +351,17 @@
                         <div id="track-items-list">
                             <!-- Dynamic items -->
                         </div>
+                    </div>
+
+                    <!-- Review Prompt for Delivered Orders -->
+                    <div id="tracking-review-prompt" class="card-glass" style="margin-top: 20px; padding: 15px; display: none; align-items: center; justify-content: space-between; border: 1px dashed var(--color-cyan); border-radius: 8px;">
+                        <div>
+                            <h5 style="margin: 0; font-size: 14.5px; font-weight: 600; color: white;">Order Delivered!</h5>
+                            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary);">Help other buyers build trust. Share your feedback on your device.</p>
+                        </div>
+                        <button class="btn btn-primary" id="btn-track-write-review" style="padding: 8px 16px; font-size: 12px;">
+                            <span>Write a Review</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -926,6 +1012,11 @@
                         <span>Download Invoice (PDF)</span>
                     </button>
                     
+                    <button class="btn btn-outline btn-block" id="btn-checkout-write-review" style="margin-bottom: 12px; border-color: var(--color-cyan); color: var(--color-cyan); display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                        <span>Write a Product Review</span>
+                    </button>
+                    
                     <button class="btn btn-primary btn-block" id="btn-close-receipt">Back to Store</button>
                 </div>
             </div>
@@ -986,6 +1077,61 @@
         </div>
     </div>
 
+    <!-- ================= CUSTOMER REVIEW SUBMISSION MODAL ================= -->
+    <div class="modal-overlay" id="review-modal" style="display: none;">
+        <div class="modal-container modal-medium card-glass" style="max-width: 450px;">
+            <button class="modal-close" id="btn-close-review-modal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="checkout-wrapper" style="padding: 25px 20px 20px 20px;">
+                <div class="text-center" style="margin-bottom: 20px; text-align: center;">
+                    <div class="lock-glow" style="display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background: rgba(6, 182, 212, 0.1); border: 1px solid var(--border-glass-active); margin-bottom: 12px; color: var(--color-cyan);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    </div>
+                    <h3 class="checkout-header-title" style="font-size: 20px; font-weight: 700;">Submit Verified Review</h3>
+                    <p class="checkout-header-subtitle" style="color: var(--text-secondary); font-size: 13px; line-height: 1.4; margin-top: 5px;">Share your experience with others. Reviews are verified against your order records.</p>
+                </div>
+
+                <form id="review-submission-form" class="checkout-form">
+                    <div class="form-field">
+                        <label for="review-order-id">Order ID *</label>
+                        <input type="text" id="review-order-id" required placeholder="e.g. PZ-ORD-123456" class="form-control" style="text-transform: uppercase;">
+                        <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">Must match the Order ID sent to your email or displayed on your receipt.</small>
+                    </div>
+
+                    <div class="form-field">
+                        <label style="margin-bottom: 8px;">Your Rating *</label>
+                        <div class="interactive-star-rating" id="review-star-picker" style="display: flex; gap: 8px; justify-content: center; font-size: 28px; margin: 5px 0;">
+                            <span class="star-picker-item" data-value="1" style="cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);">★</span>
+                            <span class="star-picker-item" data-value="2" style="cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);">★</span>
+                            <span class="star-picker-item" data-value="3" style="cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);">★</span>
+                            <span class="star-picker-item" data-value="4" style="cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);">★</span>
+                            <span class="star-picker-item" data-value="5" style="cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);">★</span>
+                        </div>
+                        <input type="hidden" id="review-rating-value" required value="">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="review-title">Review Title *</label>
+                        <input type="text" id="review-title" required placeholder="Summarize your experience (e.g. Amazing condition!)" class="form-control">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="review-comment">Detailed Feedback *</label>
+                        <textarea id="review-comment" required rows="4" placeholder="How did you find the phone packaging, battery health, and cosmetic condition?" class="form-control"></textarea>
+                    </div>
+
+                    <div class="form-actions-row" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-outline" id="btn-cancel-review">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-grow" id="btn-submit-review">
+                            <span>Publish Review</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= SHOPPING CART DRAWER ================= -->
     <div class="drawer-overlay" id="cart-drawer-overlay" style="display: none;"></div>
     <div class="cart-drawer card-glass" id="cart-drawer">
@@ -1029,6 +1175,6 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- App Logic Script -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1.0.4"></script>
 </body>
 </html>

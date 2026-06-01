@@ -7,6 +7,11 @@ const API_BASE_URL = window.location.protocol === "file:" || window.location.hos
 // --- Application State ---
 let products = [];
 let sales = [];
+let reviews = [];
+let activeReviewFilters = {
+    search: "",
+    rating: "all"
+};
 let cart = JSON.parse(localStorage.getItem("phonezone-cart")) || [];
 let activeFilters = {
     search: "",
@@ -279,7 +284,8 @@ function initApp() {
         <p>Connecting to backend API services...</p>
     </div>`;
 
-    // Fetch Products and Sales logs concurrently from Spring Boot MySQL Server
+    // Fetch Products, Sales logs, and Customer Reviews concurrently from Spring Boot MySQL Server
+    const reviewsUrl = API_BASE_URL.replace("/products", "/reviews");
     Promise.all([
         fetch(API_BASE_URL).then(res => {
             if (!res.ok) throw new Error("Could not fetch inventory");
@@ -288,9 +294,13 @@ function initApp() {
         fetch(`${API_BASE_URL}/sales`).then(res => {
             if (!res.ok) throw new Error("Could not fetch sales log");
             return res.json();
+        }),
+        fetch(reviewsUrl).then(res => {
+            if (!res.ok) throw new Error("Could not fetch customer reviews");
+            return res.json();
         })
     ])
-    .then(([fetchedProducts, fetchedSales]) => {
+    .then(([fetchedProducts, fetchedSales, fetchedReviews]) => {
         // Map backend phoneCondition to condition for UI compatibility
         products = fetchedProducts.map(p => {
             p.condition = p.phoneCondition || p.condition;
@@ -298,6 +308,7 @@ function initApp() {
         });
         
         sales = fetchedSales;
+        reviews = fetchedReviews;
 
         // Populate Dynamic Filter Lists
         populateFilterOptions();
@@ -305,6 +316,7 @@ function initApp() {
         // Initial Render
         renderStorefront();
         renderDashboard();
+        renderReviewsWall();
         
         // Initialize Cart UI
         updateCartCount();
@@ -780,6 +792,127 @@ function renderDashboardCharts(type) {
 }
 
 window.renderDashboardCharts = renderDashboardCharts;
+
+// --- Customer Reviews (Transparency Wall) Rendering ---
+function getStarsHTML(rating) {
+    let html = "";
+    const rounded = Math.round(rating);
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rounded) {
+            html += "★";
+        } else {
+            html += '<span style="color:var(--text-muted);">★</span>';
+        }
+    }
+    return html;
+}
+
+function renderReviewsWall() {
+    const avgRatingEl = document.getElementById("reviews-avg-rating");
+    const summaryStarsEl = document.getElementById("reviews-summary-stars");
+    const totalCountEl = document.getElementById("reviews-total-count");
+    const barsContainer = document.getElementById("reviews-rating-bars");
+    const grid = document.getElementById("reviews-cards-grid");
+    const emptyState = document.getElementById("reviews-empty-state");
+
+    if (!grid) return;
+
+    // 1. Calculate Aggregates
+    const total = reviews.length;
+    let sum = 0;
+    const distribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+
+    reviews.forEach(r => {
+        sum += r.rating;
+        if (distribution[r.rating] !== undefined) {
+            distribution[r.rating]++;
+        }
+    });
+
+    const avg = total === 0 ? 0.0 : (sum / total).toFixed(1);
+    
+    if (avgRatingEl) avgRatingEl.innerText = avg;
+    if (summaryStarsEl) summaryStarsEl.innerHTML = getStarsHTML(parseFloat(avg));
+    if (totalCountEl) totalCountEl.innerText = total;
+
+    // 2. Render progress bars
+    if (barsContainer) {
+        let barsHTML = "";
+        for (let stars = 5; stars >= 1; stars--) {
+            const count = distribution[stars];
+            const pct = total > 0 ? (count / total) * 100 : 0;
+            barsHTML += `
+                <div class="rating-bar-row">
+                    <span class="rating-bar-label">${stars} ★</span>
+                    <div class="rating-bar-bg">
+                        <div class="rating-bar-fill" style="width: ${pct}%"></div>
+                    </div>
+                    <span class="rating-bar-count">${count}</span>
+                </div>
+            `;
+        }
+        barsContainer.innerHTML = barsHTML;
+    }
+
+    // 3. Filter reviews
+    const filtered = reviews.filter(r => {
+        const matchesSearch = r.title.toLowerCase().includes(activeReviewFilters.search.toLowerCase()) ||
+                             r.comment.toLowerCase().includes(activeReviewFilters.search.toLowerCase()) ||
+                             r.modelName.toLowerCase().includes(activeReviewFilters.search.toLowerCase()) ||
+                             r.brandName.toLowerCase().includes(activeReviewFilters.search.toLowerCase());
+        const matchesRating = activeReviewFilters.rating === "all" || r.rating === parseInt(activeReviewFilters.rating);
+        return matchesSearch && matchesRating;
+    });
+
+    // 4. Render cards
+    if (filtered.length === 0) {
+        grid.style.display = "none";
+        if (emptyState) emptyState.style.display = "block";
+    } else {
+        grid.style.display = "grid";
+        if (emptyState) emptyState.style.display = "none";
+
+        grid.innerHTML = filtered.map(r => {
+            // Mask customer name (e.g. "Aarav Mehta" -> "Aarav M.")
+            const nameParts = r.customerName.split(" ");
+            const maskedName = nameParts.map((part, idx) => {
+                if (idx > 0 && part.length > 0) {
+                    return part[0] + ".";
+                }
+                return part;
+            }).join(" ");
+
+            const dateStr = new Date(r.timestamp).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            return `
+                <div class="review-card">
+                    <div class="review-card-header">
+                        <div class="review-customer-details">
+                            <span class="review-customer-name">${maskedName}</span>
+                            <span class="review-badge-verified" title="Order Verified via orderId: ${r.orderId}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Verified Buyer</span>
+                            </span>
+                        </div>
+                        <span class="review-date">${dateStr}</span>
+                    </div>
+                    <div class="review-card-meta">
+                        <div class="rating-stars">${getStarsHTML(r.rating)}</div>
+                        <span class="review-device-purchased">Purchased: <strong>${r.brandName} ${r.modelName}</strong></span>
+                    </div>
+                    <h4 class="review-card-title">${r.title || 'Verified Purchase'}</h4>
+                    <p class="review-card-comment">${r.comment || 'This buyer verified their order but did not provide detailed feedback.'}</p>
+                </div>
+            `;
+        }).join("");
+    }
+}
+
+window.renderReviewsWall = renderReviewsWall;
 
 // --- Customer View Event Handlers ---
 window.handleFilterChange = function(element, filterCategory) {
@@ -1495,7 +1628,7 @@ function bindEvents() {
         });
     }
 
-    function switchView(viewName) {
+    function switchView(viewName, skipScroll = false) {
         if (viewName === "store") {
             btnStore.classList.add("active");
             btnAdmin.classList.remove("active");
@@ -1528,12 +1661,43 @@ function bindEvents() {
             // Re-render dashboard components
             renderDashboard();
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (!skipScroll) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     btnStore.addEventListener("click", () => switchView("store"));
     btnAdmin.addEventListener("click", () => switchView("admin"));
     logo.addEventListener("click", () => switchView("store"));
+
+    // Scroll to specific section Helper with header offset compensation
+    function scrollToSection(sectionId) {
+        // If owner dashboard is active, switch to store view first
+        if (adminView && adminView.classList.contains("active")) {
+            switchView("store", true);
+        }
+        const target = document.getElementById(sectionId);
+        if (target) {
+            // Get fixed header height dynamically
+            const headerHeight = document.querySelector(".app-header")?.offsetHeight || 75;
+            const elementPosition = target.getBoundingClientRect().top + window.scrollY;
+            const offsetPosition = elementPosition - headerHeight - 20; // 20px padding buffer
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
+        }
+    }
+
+    const btnNavReviews = document.getElementById("btn-nav-reviews");
+    const btnNavTracking = document.getElementById("btn-nav-tracking");
+    if (btnNavReviews) {
+        btnNavReviews.addEventListener("click", () => scrollToSection("transparency-wall"));
+    }
+    if (btnNavTracking) {
+        btnNavTracking.addEventListener("click", () => scrollToSection("order-tracking-section"));
+    }
     
     // Cart Button Click - Open the Cart Drawer
     document.getElementById("btn-cart-view").addEventListener("click", () => {
@@ -2064,6 +2228,179 @@ function bindEvents() {
         tabInvContent.classList.remove("active");
         tabSalesContent.classList.add("active");
     });
+
+    // --- Customer Reviews (Transparency Wall) Event Listeners ---
+    
+    // Reviews search
+    const reviewsSearch = document.getElementById("reviews-search-input");
+    if (reviewsSearch) {
+        reviewsSearch.addEventListener("input", (e) => {
+            activeReviewFilters.search = e.target.value;
+            renderReviewsWall();
+        });
+    }
+
+    // Reviews rating filter pills
+    const filterPills = document.querySelectorAll("#reviews-rating-filters .filter-pill");
+    filterPills.forEach(pill => {
+        pill.addEventListener("click", () => {
+            filterPills.forEach(p => p.classList.remove("active"));
+            pill.classList.add("active");
+            activeReviewFilters.rating = pill.getAttribute("data-rating");
+            renderReviewsWall();
+        });
+    });
+
+    // Review Modal toggle
+    const reviewModal = document.getElementById("review-modal");
+    const openReviewBtn = document.getElementById("btn-trigger-review-modal");
+    const closeReviewBtn = document.getElementById("btn-close-review-modal");
+    const cancelReviewBtn = document.getElementById("btn-cancel-review");
+    const reviewForm = document.getElementById("review-submission-form");
+
+    function openWriteReviewModal(orderId = "") {
+        if (reviewModal) {
+            reviewModal.style.display = "flex";
+            if (reviewForm) reviewForm.reset();
+            
+            // Clear star picker visual state
+            const starItems = document.querySelectorAll(".star-picker-item");
+            starItems.forEach(s => s.classList.remove("selected", "hovered"));
+            document.getElementById("review-rating-value").value = "";
+
+            if (orderId) {
+                document.getElementById("review-order-id").value = orderId.toUpperCase();
+            }
+        }
+    }
+
+    if (openReviewBtn) {
+        openReviewBtn.addEventListener("click", () => openWriteReviewModal());
+    }
+
+    const closeWriteReviewModal = () => {
+        if (reviewModal) reviewModal.style.display = "none";
+    };
+
+    if (closeReviewBtn) closeReviewBtn.addEventListener("click", closeWriteReviewModal);
+    if (cancelReviewBtn) cancelReviewBtn.addEventListener("click", closeWriteReviewModal);
+
+    // Interactive Star Picker
+    const starItems = document.querySelectorAll(".star-picker-item");
+    const ratingInput = document.getElementById("review-rating-value");
+    
+    starItems.forEach(item => {
+        item.addEventListener("mouseenter", () => {
+            const val = parseInt(item.getAttribute("data-value"));
+            starItems.forEach(s => {
+                if (parseInt(s.getAttribute("data-value")) <= val) {
+                    s.classList.add("hovered");
+                } else {
+                    s.classList.remove("hovered");
+                }
+            });
+        });
+
+        item.addEventListener("mouseleave", () => {
+            starItems.forEach(s => s.classList.remove("hovered"));
+        });
+
+        item.addEventListener("click", () => {
+            const val = parseInt(item.getAttribute("data-value"));
+            ratingInput.value = val;
+            starItems.forEach(s => {
+                if (parseInt(s.getAttribute("data-value")) <= val) {
+                    s.classList.add("selected");
+                } else {
+                    s.classList.remove("selected");
+                }
+            });
+        });
+    });
+
+    // Review Form Submit handler
+    if (reviewForm) {
+        reviewForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const orderId = document.getElementById("review-order-id").value.trim().toUpperCase();
+            const rating = parseInt(ratingInput.value);
+            const title = document.getElementById("review-title").value.trim();
+            const comment = document.getElementById("review-comment").value.trim();
+
+            if (!rating) {
+                toast("Please select a star rating for your review.", "warning");
+                return;
+            }
+
+            const payload = {
+                orderId,
+                rating,
+                title,
+                comment
+            };
+
+            const reviewsUrl = API_BASE_URL.replace("/products", "/reviews");
+
+            fetch(reviewsUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async res => {
+                if (!res.ok) {
+                    let errMsg = "Failed to submit review.";
+                    try {
+                        const errData = await res.json();
+                        if (errData && errData.error) errMsg = errData.error;
+                    } catch (err) {}
+                    throw new Error(errMsg);
+                }
+                return res.json();
+            })
+            .then(savedReview => {
+                reviews.unshift(savedReview); // Add to the top of list
+                toast("Thank you! Your verified review has been published.", "success");
+                closeWriteReviewModal();
+                renderReviewsWall();
+            })
+            .catch(err => {
+                console.error(err);
+                toast(err.message, "danger");
+            });
+        });
+    }
+
+    // Checkout Step 4 Review Prompt Click
+    const checkoutReviewBtn = document.getElementById("btn-checkout-write-review");
+    if (checkoutReviewBtn) {
+        checkoutReviewBtn.addEventListener("click", () => {
+            let activeOrderId = "";
+            if (currentActiveSale && currentActiveSale.length > 0) {
+                activeOrderId = currentActiveSale[0].orderId;
+            }
+            document.getElementById("checkout-modal").style.display = "none";
+            openWriteReviewModal(activeOrderId);
+        });
+    }
+
+    // Tracking Panel Review Prompt Click
+    const trackingReviewBtn = document.getElementById("btn-track-write-review");
+    if (trackingReviewBtn) {
+        trackingReviewBtn.addEventListener("click", () => {
+            const trackOrderId = document.getElementById("track-order-id-display").innerText;
+            openWriteReviewModal(trackOrderId);
+        });
+    }
+
+    // Close review modal when clicking overlay
+    window.addEventListener("click", (e) => {
+        if (e.target === reviewModal) {
+            closeWriteReviewModal();
+        }
+    });
 }
 
 // --- Finalize Purchase Transaction ---
@@ -2238,6 +2575,16 @@ window.trackOrder = function() {
         // Update Timeline
         const status = orderItems[0].status; 
         updateTimelineProgress(status);
+
+        // Toggle review prompt based on Delivery status
+        const reviewPrompt = document.getElementById("tracking-review-prompt");
+        if (reviewPrompt) {
+            if (status === "Delivered") {
+                reviewPrompt.style.display = "flex";
+            } else {
+                reviewPrompt.style.display = "none";
+            }
+        }
 
         // Store for invoice re-download in lookup section
         window.trackActiveOrderItems = orderItems;

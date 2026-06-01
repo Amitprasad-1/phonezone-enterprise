@@ -4047,3 +4047,454 @@ body.light-mode .chart-toggle-btn.active {
     border-color: transparent !important;
 }
 
+
+/* ==========================================================================
+   CUSTOMER REVIEWS (TRANSPARENCY WALL) COMPONENT STYLES
+   ========================================================================== */
+
+.reviews-section {
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.reviews-header {
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 15px;
+}
+
+.reviews-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    color: white;
+    margin: 0;
+}
+
+.reviews-icon {
+    color: var(--color-cyan);
+    filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.4));
+}
+
+.reviews-header p {
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+.reviews-grid-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .reviews-grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Rating Summary Card */
+.reviews-summary-card {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+}
+
+.rating-overall-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.rating-overall-score {
+    font-family: var(--font-heading);
+    font-size: 42px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+}
+
+.rating-overall-stars-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rating-stars {
+    color: #fbbf24; /* Amber star color */
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+}
+
+.rating-overall-count-label {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* Breakdown Bars */
+.rating-breakdown-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rating-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.rating-bar-label {
+    width: 35px;
+    text-align: right;
+    font-weight: 500;
+}
+
+.rating-bar-bg {
+    flex-grow: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.rating-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
+    transition: width 0.8s ease-in-out;
+}
+
+.rating-bar-count {
+    width: 30px;
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 11.5px;
+}
+
+/* Reviews List, Search & Filters */
+.reviews-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.reviews-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 15px;
+}
+
+.reviews-search-box {
+    position: relative;
+    max-width: 350px;
+    width: 100%;
+}
+
+.reviews-search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    font-size: 13.5px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    color: white;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.reviews-search-box input:focus {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.reviews-search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.reviews-rating-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-pill {
+    padding: 6px 14px;
+    font-size: 12.5px;
+    border-radius: 20px;
+    border: 1px solid var(--border-glass);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-pill:hover {
+    border-color: var(--border-glass-active);
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-pill.active {
+    background: linear-gradient(135deg, var(--color-violet), var(--color-cyan)) !important;
+    border-color: transparent !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    font-weight: 600;
+}
+
+/* Reviews Cards Grid */
+.reviews-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar for Reviews */
+.reviews-cards-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.reviews-cards-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+.reviews-cards-grid::-webkit-scrollbar-thumb {
+    background: var(--border-glass);
+    border-radius: 3px;
+}
+.reviews-cards-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--border-glass-active);
+}
+
+/* Review Card styling */
+.review-card {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.review-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-glass-active);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.review-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--color-cyan), var(--color-violet));
+    opacity: 0.7;
+}
+
+.review-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.review-customer-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.review-customer-name {
+    font-weight: 600;
+    color: white;
+    font-size: 14.5px;
+}
+
+.review-badge-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #34d399; /* Emerald color */
+    border-radius: 20px;
+}
+
+.review-date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.review-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.review-device-purchased {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.review-device-purchased strong {
+    color: var(--color-cyan);
+    font-weight: 600;
+}
+
+.review-card-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: white;
+    margin: 4px 0 0 0;
+}
+
+.review-card-comment {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Interactive Star Picker */
+.star-picker-item {
+    font-size: 32px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+}
+
+.star-picker-item.hovered,
+.star-picker-item.selected {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    transform: scale(1.15);
+}
+
+.star-picker-item:active {
+    transform: scale(0.9);
+}
+
+/* Empty Reviews State */
+.reviews-empty {
+    text-align: center;
+    border: 1px dashed var(--border-glass);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+/* Light Mode Overrides */
+body.light-mode .reviews-header h2 {
+    color: #0f172a !important;
+}
+
+body.light-mode .reviews-summary-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02) !important;
+}
+
+body.light-mode .rating-overall-score {
+    color: #0f172a !important;
+}
+
+body.light-mode .rating-bar-bg {
+    background: rgba(15, 23, 42, 0.04) !important;
+}
+
+body.light-mode .reviews-search-box input {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+body.light-mode .reviews-search-box input:focus {
+    border-color: var(--color-violet) !important;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
+}
+
+body.light-mode .filter-pill {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+body.light-mode .filter-pill:hover {
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+body.light-mode .review-card {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.02) !important;
+}
+
+body.light-mode .review-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+}
+
+body.light-mode .review-customer-name {
+    color: #0f172a !important;
+}
+
+body.light-mode .review-card-title {
+    color: #0f172a !important;
+}
+
+body.light-mode .review-card-comment {
+    color: #475569 !important;
+}
+
+body.light-mode .review-device-purchased {
+    color: #475569 !important;
+}
+
+body.light-mode .review-device-purchased strong {
+    color: #0891b2 !important;
+}
+
+body.light-mode .reviews-empty {
+    border-color: #cbd5e1 !important;
+}
+
+
