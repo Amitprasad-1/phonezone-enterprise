@@ -1227,6 +1227,24 @@ function toast(message, type = "success") {
 }
 
 // --- Helper Functions ---
+function setNavActive(activeId) {
+    const btnStore = document.getElementById("btn-store-view");
+    const btnReviews = document.getElementById("btn-nav-reviews");
+    const btnTracking = document.getElementById("btn-nav-tracking");
+    const btnAdmin = document.getElementById("btn-admin-view");
+
+    if (btnStore) btnStore.classList.remove("active");
+    if (btnReviews) btnReviews.classList.remove("active");
+    if (btnTracking) btnTracking.classList.remove("active");
+    if (btnAdmin) btnAdmin.classList.remove("active");
+
+    if (activeId === "store" && btnStore) btnStore.classList.add("active");
+    if (activeId === "reviews" && btnReviews) btnReviews.classList.add("active");
+    if (activeId === "tracking" && btnTracking) btnTracking.classList.add("active");
+    if (activeId === "admin" && btnAdmin) btnAdmin.classList.add("active");
+}
+window.setNavActive = setNavActive;
+
 function formatINR(num) {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 }
@@ -1603,6 +1621,11 @@ function bindEvents() {
             const isLight = document.body.classList.toggle("light-mode");
             localStorage.setItem("phonezone-mode", isLight ? "light" : "dark");
             toast(`Switched to ${isLight ? 'Light' : 'Dark'} Mode!`, "info");
+            
+            // Live update the analytics chart color theme if dashboard is active
+            if (adminView && adminView.classList.contains("active")) {
+                renderDashboardCharts(currentChartType);
+            }
         });
     }
 
@@ -1630,8 +1653,7 @@ function bindEvents() {
 
     function switchView(viewName, skipScroll = false) {
         if (viewName === "store") {
-            btnStore.classList.add("active");
-            btnAdmin.classList.remove("active");
+            setNavActive("store");
             customerView.classList.add("active");
             adminView.classList.remove("active");
         } else {
@@ -1647,16 +1669,17 @@ function bindEvents() {
                 return;
             }
 
-            btnStore.classList.remove("active");
-            btnAdmin.classList.add("active");
+            setNavActive("admin");
             customerView.classList.remove("active");
             adminView.classList.add("active");
             
             // Clear owner alerts badge when visiting dashboard
             unseenSalesCount = 0;
             const badge = document.getElementById("admin-badge-count");
-            badge.style.display = "none";
-            badge.innerText = "0";
+            if (badge) {
+                badge.style.display = "none";
+                badge.innerText = "0";
+            }
             
             // Re-render dashboard components
             renderDashboard();
@@ -1671,6 +1694,8 @@ function bindEvents() {
     logo.addEventListener("click", () => switchView("store"));
 
     // Scroll to specific section Helper with header offset compensation
+    let isScrollingProgrammatically = false;
+
     function scrollToSection(sectionId) {
         // If owner dashboard is active, switch to store view first
         if (adminView && adminView.classList.contains("active")) {
@@ -1678,6 +1703,17 @@ function bindEvents() {
         }
         const target = document.getElementById(sectionId);
         if (target) {
+            isScrollingProgrammatically = true;
+
+            // Instantly highlight target button for visual responsiveness
+            if (sectionId === "transparency-wall") {
+                setNavActive("reviews");
+            } else if (sectionId === "order-tracking-section") {
+                setNavActive("tracking");
+            } else if (sectionId === "storefront") {
+                setNavActive("store");
+            }
+
             // Get fixed header height dynamically
             const headerHeight = document.querySelector(".app-header")?.offsetHeight || 75;
             const elementPosition = target.getBoundingClientRect().top + window.scrollY;
@@ -1687,8 +1723,14 @@ function bindEvents() {
                 top: offsetPosition,
                 behavior: "smooth"
             });
+
+            // Unlock after smooth scroll completes (~800ms)
+            setTimeout(() => {
+                isScrollingProgrammatically = false;
+            }, 800);
         }
     }
+    window.scrollToSection = scrollToSection;
 
     const btnNavReviews = document.getElementById("btn-nav-reviews");
     const btnNavTracking = document.getElementById("btn-nav-tracking");
@@ -1698,6 +1740,33 @@ function bindEvents() {
     if (btnNavTracking) {
         btnNavTracking.addEventListener("click", () => scrollToSection("order-tracking-section"));
     }
+
+    // Real-time Navigation Highlighting on Scroll
+    window.addEventListener("scroll", () => {
+        if (isScrollingProgrammatically) return;
+        
+        // Only run scroll checks if customer storefront is active
+        if (!customerView.classList.contains("active")) return;
+        
+        const headerHeight = document.querySelector(".app-header")?.offsetHeight || 80;
+        const scrollPos = window.scrollY + headerHeight + 150; // Offset threshold
+        
+        const transparencyWall = document.getElementById("transparency-wall");
+        const trackingSection = document.getElementById("order-tracking-section");
+        
+        // Fail-safe check: if at the very bottom, highlight the last visible section (Track Order)
+        const isAtBottom = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 10;
+        
+        if (isAtBottom && trackingSection) {
+            setNavActive("tracking");
+        } else if (trackingSection && scrollPos >= trackingSection.offsetTop) {
+            setNavActive("tracking");
+        } else if (transparencyWall && scrollPos >= transparencyWall.offsetTop) {
+            setNavActive("reviews");
+        } else {
+            setNavActive("store");
+        }
+    });
     
     // Cart Button Click - Open the Cart Drawer
     document.getElementById("btn-cart-view").addEventListener("click", () => {
