@@ -3180,15 +3180,23 @@ body.light-mode .logo-text {
 
 /* Logo Image Styling & Hover Micro-animations */
 .logo-container img {
+    background-color: #070a13; /* PhoneZone signature black background */
+    border-radius: var(--border-radius-sm);
+    padding: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: var(--transition-bounce);
+}
+
+body.light-mode .logo-container img {
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
 }
 
 .logo-container:hover img {
     transform: scale(1.08) rotate(-4deg);
-}
-
-body.light-mode .logo-container img {
-    filter: drop-shadow(0 0 1.5px rgba(7, 10, 19, 0.65)) drop-shadow(0 1px 3px rgba(7, 10, 19, 0.15));
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
 }
 
 /* Theme Toggle Button Style */
