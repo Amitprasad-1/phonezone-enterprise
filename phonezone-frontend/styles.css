@@ -3167,13 +3167,36 @@ body.light-mode .badge-new {
     color: #0369a1;
 }
 
+body.light-mode .app-header {
+    background: rgba(241, 245, 249, 0.85);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body.light-mode .logo-text {
+    background: linear-gradient(to right, #0f172a, #475569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 /* Logo Image Styling & Hover Micro-animations */
 .logo-container img {
+    background-color: #070a13; /* PhoneZone signature black background */
+    border-radius: var(--border-radius-sm);
+    padding: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: var(--transition-bounce);
+}
+
+body.light-mode .logo-container img {
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
 }
 
 .logo-container:hover img {
     transform: scale(1.08) rotate(-4deg);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
 }
 
 /* Theme Toggle Button Style */
@@ -3198,7 +3221,18 @@ body.light-mode .badge-new {
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
 }
 
+body.light-mode .theme-toggle-btn {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
 
+body.light-mode .theme-toggle-btn:hover {
+    color: var(--color-violet);
+    background: rgba(124, 58, 237, 0.05);
+    border-color: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+}
 
 /* Sun/Moon Toggle Visibility */
 body.light-mode .theme-toggle-btn .sun-icon {
@@ -3273,7 +3307,39 @@ body.light-mode .hero-carousel .btn-outline:hover {
     background: rgba(255, 255, 255, 0.08) !important;
 }
 
+body.light-mode .main-nav {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+}
 
+body.light-mode .nav-link:hover {
+    color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.05);
+}
+
+body.light-mode .nav-link.active {
+    color: white !important;
+    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25) !important;
+}
+
+body.light-mode .nav-link.active:hover {
+    color: white !important;
+    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
+    opacity: 0.92;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+}
+
+body.light-mode .cart-btn {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+body.light-mode .cart-btn:hover {
+    background: rgba(6, 182, 212, 0.05);
+    border-color: rgba(6, 182, 212, 0.2);
+}
 
 /* Sidebar and Header controls in Light Mode */
 body.light-mode .store-sidebar {
