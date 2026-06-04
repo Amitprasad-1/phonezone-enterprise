@@ -1,0 +1,21 @@
+{
+  "short_name": "PhoneZone",
+  "name": "PhoneZone Premium Store",
+  "icons": [
+    {
+      "src": "/favicon.png?v=10",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/apple-touch-icon.png?v=10",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#070a13",
+  "theme_color": "#070a13",
+  "display": "standalone",
+  "orientation": "portrait"
+}
