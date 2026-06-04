@@ -461,9 +461,36 @@ button {
     z-index: 10;
 }
 
-.store-sidebar:hover {
+.store-sidebar:hover,
+.store-sidebar:focus-within {
     width: 280px;
     padding: 25px;
+    max-height: calc(100vh - var(--header-height) - 60px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for store sidebar */
+.store-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+.store-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.store-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+.store-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cyan);
+}
+
+body.light-mode .store-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.12);
+}
+body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-violet);
 }
 
 .store-sidebar::before {
@@ -483,7 +510,8 @@ button {
     pointer-events: none;
 }
 
-.store-sidebar:hover::before {
+.store-sidebar:hover::before,
+.store-sidebar:focus-within::before {
     opacity: 0;
 }
 
@@ -493,7 +521,8 @@ button {
     pointer-events: none;
 }
 
-.store-sidebar:hover > * {
+.store-sidebar:hover > *,
+.store-sidebar:focus-within > * {
     opacity: 1;
     pointer-events: auto;
     transition: opacity 0.3s ease 0.1s;
