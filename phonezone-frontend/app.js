@@ -164,7 +164,7 @@ function startLiveActivity() {
         dispatchTime.setHours(21, 0, 0, 0); // 9:00 PM
         
         if (now.getTime() >= dispatchTime.getTime()) {
-            dispatchTime.setDate(dispatchTime.setDate() + 1);
+            dispatchTime.setDate(dispatchTime.getDate() + 1);
         }
         
         const diffMs = dispatchTime.getTime() - now.getTime();
