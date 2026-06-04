@@ -1233,15 +1233,37 @@ function setNavActive(activeId) {
     const btnTracking = document.getElementById("btn-nav-tracking");
     const btnAdmin = document.getElementById("btn-admin-view");
 
+    const mobStore = document.getElementById("mobile-btn-store");
+    const mobReviews = document.getElementById("mobile-btn-reviews");
+    const mobTracking = document.getElementById("mobile-btn-tracking");
+    const mobAdmin = document.getElementById("mobile-btn-admin");
+
     if (btnStore) btnStore.classList.remove("active");
     if (btnReviews) btnReviews.classList.remove("active");
     if (btnTracking) btnTracking.classList.remove("active");
     if (btnAdmin) btnAdmin.classList.remove("active");
 
-    if (activeId === "store" && btnStore) btnStore.classList.add("active");
-    if (activeId === "reviews" && btnReviews) btnReviews.classList.add("active");
-    if (activeId === "tracking" && btnTracking) btnTracking.classList.add("active");
-    if (activeId === "admin" && btnAdmin) btnAdmin.classList.add("active");
+    if (mobStore) mobStore.classList.remove("active");
+    if (mobReviews) mobReviews.classList.remove("active");
+    if (mobTracking) mobTracking.classList.remove("active");
+    if (mobAdmin) mobAdmin.classList.remove("active");
+
+    if (activeId === "store") {
+        if (btnStore) btnStore.classList.add("active");
+        if (mobStore) mobStore.classList.add("active");
+    }
+    if (activeId === "reviews") {
+        if (btnReviews) btnReviews.classList.add("active");
+        if (mobReviews) mobReviews.classList.add("active");
+    }
+    if (activeId === "tracking") {
+        if (btnTracking) btnTracking.classList.add("active");
+        if (mobTracking) mobTracking.classList.add("active");
+    }
+    if (activeId === "admin") {
+        if (btnAdmin) btnAdmin.classList.add("active");
+        if (mobAdmin) mobAdmin.classList.add("active");
+    }
 }
 window.setNavActive = setNavActive;
 
@@ -1680,6 +1702,11 @@ function bindEvents() {
                 badge.style.display = "none";
                 badge.innerText = "0";
             }
+            const mobBadge = document.getElementById("mobile-admin-badge-count");
+            if (mobBadge) {
+                mobBadge.style.display = "none";
+                mobBadge.innerText = "0";
+            }
             
             // Re-render dashboard components
             renderDashboard();
@@ -1692,6 +1719,15 @@ function bindEvents() {
     btnStore.addEventListener("click", () => switchView("store"));
     btnAdmin.addEventListener("click", () => switchView("admin"));
     logo.addEventListener("click", () => switchView("store"));
+
+    const mobStore = document.getElementById("mobile-btn-store");
+    const mobAdmin = document.getElementById("mobile-btn-admin");
+    if (mobStore) {
+        mobStore.addEventListener("click", () => switchView("store"));
+    }
+    if (mobAdmin) {
+        mobAdmin.addEventListener("click", () => switchView("admin"));
+    }
 
     // Scroll to specific section Helper with header offset compensation
     let isScrollingProgrammatically = false;
@@ -1739,6 +1775,15 @@ function bindEvents() {
     }
     if (btnNavTracking) {
         btnNavTracking.addEventListener("click", () => scrollToSection("order-tracking-section"));
+    }
+
+    const mobReviews = document.getElementById("mobile-btn-reviews");
+    const mobTracking = document.getElementById("mobile-btn-tracking");
+    if (mobReviews) {
+        mobReviews.addEventListener("click", () => scrollToSection("transparency-wall"));
+    }
+    if (mobTracking) {
+        mobTracking.addEventListener("click", () => scrollToSection("order-tracking-section"));
     }
 
     // Real-time Navigation Highlighting on Scroll
@@ -2533,6 +2578,11 @@ function completeTransaction() {
         if (badge) {
             badge.innerText = unseenSalesCount;
             badge.style.display = "inline-flex";
+        }
+        const mobBadge = document.getElementById("mobile-admin-badge-count");
+        if (mobBadge) {
+            mobBadge.innerText = unseenSalesCount;
+            mobBadge.style.display = "inline-flex";
         }
 
         // Render digital receipt items

@@ -2441,6 +2441,18 @@ textarea.form-control {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding-bottom: 75px;
+    }
+
+    .app-header .main-nav {
+        display: none;
+    }
+
+    .mobile-bottom-nav {
+        display: flex;
+    }
+
     .header-container {
         padding: 0 15px;
     }
@@ -4519,6 +4531,86 @@ body.light-mode .review-device-purchased strong {
 
 body.light-mode .reviews-empty {
     border-color: #cbd5e1 !important;
+}
+
+/* Mobile Bottom Navigation Bar Styles */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-glass);
+    display: none;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    padding: 0 10px;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    width: 22%;
+    height: 100%;
+    transition: var(--transition-smooth);
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 6px 0;
+}
+
+.mobile-nav-link svg {
+    color: var(--text-secondary);
+    transition: var(--transition-smooth);
+    stroke: currentColor;
+    stroke-width: 2px;
+}
+
+.mobile-nav-link:hover {
+    color: var(--text-primary);
+}
+
+.mobile-nav-link.active {
+    color: white;
+}
+
+.mobile-nav-link.active svg {
+    color: var(--color-cyan);
+    filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.6));
+}
+
+.mobile-nav-link.active::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 25px;
+    height: 3px;
+    background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 1px 8px rgba(139, 92, 246, 0.8);
+}
+
+.mobile-nav-link .badge-admin-notify {
+    top: 4px;
+    right: 22%;
+}
+
+body.light-mode .mobile-bottom-nav {
+    background: rgba(248, 250, 252, 0.9);
+    border-top-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.06);
 }
 
 
