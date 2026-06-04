@@ -2,7 +2,18 @@
    PHONEZONE MAIN JAVASCRIPT APPLICATION LOGIC (AJAX & SPRING BOOT MYSQL VERSION)
    ========================================================================== */
 
-const API_BASE_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://localhost:8080/api/products" : "https://phonezone-enterprise.onrender.com/api/products";
+// Detect if the app is running locally (PC or local Wi-Fi IP address) to route API calls to the local Spring Boot backend
+const isLocal = window.location.hostname === "localhost" || 
+                window.location.hostname === "127.0.0.1" || 
+                window.location.protocol === "file:" ||
+                /^192\.168\./.test(window.location.hostname) ||
+                /^10\./.test(window.location.hostname) ||
+                /^172\.(1[6-9]|2[0-9]|3[01])\./.test(window.location.hostname) ||
+                window.location.hostname.endsWith(".local");
+
+const API_BASE_URL = isLocal 
+    ? `http://${(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || !window.location.hostname) ? "localhost" : window.location.hostname}:8080/api/products`
+    : "https://phonezone-enterprise.onrender.com/api/products";
 
 // --- Application State ---
 let products = [];
@@ -338,7 +349,7 @@ function loadData() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="1.5" style="margin-bottom:15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                 <h3 style="color:var(--text-primary); margin-bottom:8px;">Backend Connection Offline</h3>
                 <p style="color:var(--text-secondary); max-width:400px; margin:0 auto 20px auto; font-size:13.5px; line-height:1.5;">
-                    Unable to contact the PhoneZone API at <strong>localhost:8080</strong>. Please make sure the Spring Boot server is started and running.
+                    Unable to contact the PhoneZone API at <strong>${new URL(API_BASE_URL).host}</strong>. Please make sure the Spring Boot server is started and running.
                 </p>
                 <button class="btn btn-primary" onclick="loadData()">Retry Connection</button>
             </div>`;
