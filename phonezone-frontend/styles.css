@@ -3178,6 +3178,19 @@ body.light-mode .logo-text {
     -webkit-text-fill-color: transparent;
 }
 
+/* Logo Image Styling & Hover Micro-animations */
+.logo-container img {
+    transition: var(--transition-bounce);
+}
+
+.logo-container:hover img {
+    transform: scale(1.08) rotate(-4deg);
+}
+
+body.light-mode .logo-container img {
+    filter: drop-shadow(0 0 1.5px rgba(7, 10, 19, 0.65)) drop-shadow(0 1px 3px rgba(7, 10, 19, 0.15));
+}
+
 /* Theme Toggle Button Style */
 .theme-toggle-btn {
     width: 42px;
