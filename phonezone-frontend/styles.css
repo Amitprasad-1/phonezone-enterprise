@@ -4613,4 +4613,8 @@ body.light-mode .mobile-bottom-nav {
     box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.06);
 }
 
+body.light-mode .mobile-nav-link.active {
+    color: var(--text-primary) !important;
+}
+
 

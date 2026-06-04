@@ -263,6 +263,7 @@ function launchConfetti() {
 }
 
 // --- Initialize Database & State ---
+// --- Initialize Database & State ---
 function initApp() {
     // Load saved theme mode (light/dark)
     const savedMode = localStorage.getItem("phonezone-mode") || "dark";
@@ -272,17 +273,25 @@ function initApp() {
         document.body.classList.remove("light-mode");
     }
 
-
-    
     // Launch simulated live activities
     startLiveActivity();
 
+    // Bind Event Handlers immediately so UI is responsive even if backend is offline
+    bindEvents();
+
+    // Fetch products, sales, and reviews
+    loadData();
+}
+
+function loadData() {
     // Show visual loading indicator in products grid
     const grid = document.getElementById("products-grid");
-    grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-secondary);">
-        <div class="payment-spinner" style="position:static; margin:0 auto 15px auto; width:40px; height:40px;"></div>
-        <p>Connecting to backend API services...</p>
-    </div>`;
+    if (grid) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-secondary);">
+            <div class="payment-spinner" style="position:static; margin:0 auto 15px auto; width:40px; height:40px;"></div>
+            <p>Connecting to backend API services...</p>
+        </div>`;
+    }
 
     // Fetch Products, Sales logs, and Customer Reviews concurrently from Spring Boot MySQL Server
     const reviewsUrl = API_BASE_URL.replace("/products", "/reviews");
@@ -321,20 +330,19 @@ function initApp() {
         // Initialize Cart UI
         updateCartCount();
         renderCart();
-        
-        // Bind Event Handlers
-        bindEvents();
     })
     .catch(err => {
         console.error("Database connection failed: ", err);
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; border: 1px dashed var(--color-danger); border-radius:12px; background:rgba(239,68,68,0.05);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="1.5" style="margin-bottom:15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            <h3 style="color:white; margin-bottom:8px;">Backend Connection Offline</h3>
-            <p style="color:var(--text-secondary); max-width:400px; margin:0 auto 20px auto; font-size:13.5px; line-height:1.5;">
-                Unable to contact the PhoneZone API at <strong>localhost:8080</strong>. Please make sure the Spring Boot server is started and running.
-            </p>
-            <button class="btn btn-primary" onclick="initApp()">Retry Connection</button>
-        </div>`;
+        if (grid) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; border: 1px dashed var(--color-danger); border-radius:12px; background:rgba(239,68,68,0.05);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="1.5" style="margin-bottom:15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <h3 style="color:var(--text-primary); margin-bottom:8px;">Backend Connection Offline</h3>
+                <p style="color:var(--text-secondary); max-width:400px; margin:0 auto 20px auto; font-size:13.5px; line-height:1.5;">
+                    Unable to contact the PhoneZone API at <strong>localhost:8080</strong>. Please make sure the Spring Boot server is started and running.
+                </p>
+                <button class="btn btn-primary" onclick="loadData()">Retry Connection</button>
+            </div>`;
+        }
         toast("Backend connection failed. Read walkthrough to start Spring Boot.", "danger");
     });
 }
@@ -613,16 +621,25 @@ function renderDashboard() {
                 <option value="${opt}" ${sale.status === opt ? 'selected' : ''}>${opt}</option>
             `).join("");
 
-            // Color coding styling for the status select dropdown
-            let badgeStyle = "background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.2); color: #a78bfa;"; // Default violet
+            // Color coding styling for the status select dropdown (theme-aware contrast adjustment)
+            const isLight = document.body.classList.contains("light-mode");
+            let badgeStyle = isLight 
+                ? "background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(124, 58, 237, 0.2); color: #6d28d9;" 
+                : "background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.2); color: #a78bfa;"; // Default violet / In Transit
             let statusDot = "dot-success";
             if (sale.status === "Pending") {
-                badgeStyle = "background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;"; // Amber
+                badgeStyle = isLight
+                    ? "background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.2); color: #b45309;"
+                    : "background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;"; // Amber
                 statusDot = "dot-danger"; // Red-orange
             } else if (sale.status === "Dispatched") {
-                badgeStyle = "background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.2); color: #22d3ee;"; // Cyan
+                badgeStyle = isLight
+                    ? "background: rgba(8, 145, 178, 0.12); border: 1px solid rgba(8, 145, 178, 0.2); color: #0891b2;"
+                    : "background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.2); color: #22d3ee;"; // Cyan
             } else if (sale.status === "Delivered") {
-                badgeStyle = "background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;"; // Emerald
+                badgeStyle = isLight
+                    ? "background: rgba(5, 150, 105, 0.12); border: 1px solid rgba(5, 150, 105, 0.2); color: #047857;"
+                    : "background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;"; // Emerald
             }
 
             return `
@@ -630,7 +647,7 @@ function renderDashboard() {
                     <td class="font-mono text-cyan" style="font-weight:600;">${sale.orderId}</td>
                     <td>${new Date(sale.timestamp).toLocaleString()}</td>
                     <td>
-                        <div style="font-weight:600; color:white;">${sale.customerName}</div>
+                        <div style="font-weight:600; color:var(--text-primary);">${sale.customerName}</div>
                         <div style="font-size:11px; color:var(--text-secondary);">${sale.customerEmail}</div>
                         <div style="font-size:11px; color:var(--text-muted);">${sale.customerAddress}, ${sale.customerCity}</div>
                     </td>
