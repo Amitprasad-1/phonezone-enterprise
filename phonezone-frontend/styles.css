@@ -4601,7 +4601,6 @@ body.light-mode .reviews-empty {
 }
 
 .mobile-nav-link svg {
-    color: var(--text-secondary);
     transition: var(--transition-smooth);
     stroke: currentColor;
     stroke-width: 2px;
@@ -4624,6 +4623,8 @@ body.light-mode .reviews-empty {
     content: "";
     position: absolute;
     top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     width: 25px;
     height: 3px;
     background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
@@ -4644,6 +4645,25 @@ body.light-mode .mobile-bottom-nav {
 
 body.light-mode .mobile-nav-link.active {
     color: var(--text-primary) !important;
+}
+
+body.light-mode .mobile-nav-link.active svg {
+    filter: drop-shadow(0 1px 3px rgba(8, 145, 178, 0.2));
+}
+
+body.light-mode .mobile-nav-link.active::after {
+    box-shadow: 0 1px 4px rgba(124, 58, 237, 0.3);
+}
+
+/* Responsive Cart Drawer on Mobile Screens */
+@media (max-width: 480px) {
+    .cart-drawer {
+        width: 100%;
+        right: -100%;
+    }
+    .cart-drawer.open {
+        right: 0;
+    }
 }
 
 
