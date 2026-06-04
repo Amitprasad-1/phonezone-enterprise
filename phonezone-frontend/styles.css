@@ -1684,8 +1684,11 @@ textarea.form-control {
 .modal-container {
     width: 100%;
     max-height: calc(100vh - 40px);
-    overflow-y: auto;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Do not scroll container itself */
     animation: scaleUpIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1704,19 +1707,23 @@ textarea.form-control {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.8) !important;
+    /* Semi-opaque background to cover scroll content */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--border-glass);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
     transition: var(--transition-smooth);
-    z-index: 10;
+    z-index: 100;
+    /* Float on top of everything */
 }
 
 .modal-close:hover {
     color: white;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.95) !important;
 }
 
 /* Product Detail Grid Layout */
@@ -1724,6 +1731,10 @@ textarea.form-control {
     display: grid;
     grid-template-columns: 1.1fr 1.3fr;
     min-height: 480px;
+    overflow-y: auto;
+    /* Scroll grid content */
+    max-height: 100%;
+    flex-grow: 1;
 }
 
 .modal-image-panel {
@@ -2031,6 +2042,10 @@ textarea.form-control {
    ========================================================================== */
 .checkout-wrapper {
     padding: 30px;
+    overflow-y: auto;
+    /* Scroll forms */
+    max-height: 100%;
+    flex-grow: 1;
 }
 
 .checkout-header-title {
@@ -2698,6 +2713,48 @@ textarea.form-control {
     .table-filters select {
         width: 100%;
     }
+
+    /* Store Toolbar stack to resolve overlap on mobile */
+    .store-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 15px;
+    }
+
+    .sort-selector {
+        justify-content: space-between;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .sort-selector select {
+        flex-grow: 1;
+        max-width: 70%;
+    }
+
+    /* Modal Close Button and detail price tag scale down on mobile */
+    .modal-close {
+        top: 12px !important;
+        right: 12px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .detail-price-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .detail-price-wrapper {
+        width: 100%;
+    }
+
+    .savings-tag {
+        margin-top: 2px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2734,48 +2791,6 @@ textarea.form-control {
     #dashboard-svg-chart-container svg {
         width: 180px !important;
         height: 180px !important;
-    }
-
-    /* Store Toolbar stack to resolve overlap */
-    .store-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-        padding: 15px;
-    }
-
-    .sort-selector {
-        justify-content: space-between;
-        width: 100%;
-        gap: 8px;
-    }
-
-    .sort-selector select {
-        flex-grow: 1;
-        max-width: 70%;
-    }
-
-    /* Modal Close Button and detail price tag scale down */
-    .modal-close {
-        top: 12px !important;
-        right: 12px !important;
-        width: 32px !important;
-        height: 32px !important;
-    }
-
-    .detail-price-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 15px;
-    }
-
-    .detail-price-wrapper {
-        width: 100%;
-    }
-
-    .savings-tag {
-        margin-top: 2px;
     }
 }
 
@@ -2885,60 +2900,7 @@ textarea.form-control {
     pointer-events: none;
 }
 
-/* Modal scrolling and fixed close button fixes */
-.modal-container {
-    width: 100%;
-    max-height: calc(100vh - 40px);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    /* Do not scroll container itself */
-    animation: scaleUpIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.modal-content-grid {
-    display: grid;
-    grid-template-columns: 1.1fr 1.3fr;
-    overflow-y: auto;
-    /* Scroll grid content */
-    max-height: 100%;
-    flex-grow: 1;
-}
-
-.checkout-wrapper {
-    padding: 30px;
-    overflow-y: auto;
-    /* Scroll forms */
-    max-height: 100%;
-    flex-grow: 1;
-}
-
-.modal-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: rgba(15, 23, 42, 0.8) !important;
-    /* Semi-opaque background to cover scroll content */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border-glass);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    transition: var(--transition-smooth);
-    z-index: 100;
-    /* Float on top of everything */
-}
-
-.modal-close:hover {
-    color: white;
-    background: rgba(15, 23, 42, 0.95) !important;
-}
+/* Modal scrolling and fixed close button configurations */
 
 /* Order Tracking Panel Base Styling */
 .order-tracking-section {
