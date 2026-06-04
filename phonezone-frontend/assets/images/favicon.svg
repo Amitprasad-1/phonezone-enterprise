@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <!-- Brand blue/cyan gradient -->
+    <linearGradient id="pz-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff" />
+      <stop offset="100%" stop-color="#0066ff" />
+    </linearGradient>
+  </defs>
+  
+  <g transform="rotate(-10 50 50)">
+    <!-- Tilted Phone -->
+    <rect x="22" y="10" width="42" height="80" rx="8" fill="none" stroke="url(#pz-grad)" stroke-width="4" />
+    
+    <!-- Phone Speaker notch -->
+    <line x1="38" y1="16" x2="48" y2="16" stroke="url(#pz-grad)" stroke-width="3" stroke-linecap="round" />
+    
+    <!-- Phone Home line -->
+    <line x1="39" y1="84" x2="47" y2="84" stroke="url(#pz-grad)" stroke-width="3" stroke-linecap="round" />
+    
+    <!-- White Stylized "P" -->
+    <!-- fill-rule="evenodd" is used to create the hole in the loop -->
+    <path fill="#ffffff" fill-rule="evenodd" d="
+      M 28 72 
+      L 28 28 
+      L 50 28 
+      C 57 28, 59 32, 59 38 
+      C 59 44, 57 48, 50 48 
+      L 36 48 
+      L 36 72 
+      Z 
+      M 36 34 
+      L 36 42 
+      L 48 42 
+      C 51 42, 52 40, 52 38 
+      C 52 36, 51 34, 48 34 
+      Z
+    " />
+    
+    <!-- Gradient Stylized "Z" -->
+    <path fill="url(#pz-grad)" d="
+      M 46 48 
+      L 70 48 
+      L 70 54 
+      L 54 54 
+      L 38 72 
+      L 64 72 
+      L 64 78 
+      L 32 78 
+      L 32 72 
+      L 48 54 
+      L 46 54 
+      Z
+    " />
+  </g>
+</svg>
