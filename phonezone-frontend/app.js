@@ -15,6 +15,12 @@ const API_BASE_URL = isLocal
     ? `http://${(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || !window.location.hostname) ? "localhost" : window.location.hostname}:8080/api/products`
     : "https://phonezone-enterprise.onrender.com/api/products";
 
+// Helper to robustly split image strings which may contain Base64 data URLs
+function getProductImages(imageString) {
+    if (!imageString) return ["assets/images/iphone.png"];
+    return imageString.split(/,(?=(?:data:|assets\/|http))/).map(s => s.trim()).filter(Boolean);
+}
+
 // --- Application State ---
 let products = [];
 let sales = [];
@@ -35,6 +41,7 @@ let selectedProductForPurchase = null;
 let unseenSalesCount = 0;
 let currentActiveSale = null;
 let currentChartType = 'brand';
+let isOfflineMode = false;
 
 // Carousel Gallery State
 let carouselImages = [];
@@ -105,7 +112,7 @@ function renderCart() {
             const displayAge = formatDeviceAge(item.ageValue, item.ageUnit);
             return `
                 <div class="cart-item">
-                    <img src="${item.image ? item.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${item.model}" class="cart-item-thumb" onerror="this.src='assets/images/iphone.png'">
+                    <img src="${getProductImages(item.image)[0]}" alt="${item.model}" class="cart-item-thumb" onerror="this.src='assets/images/iphone.png'">
                     <div class="cart-item-info">
                         <div class="cart-item-title" style="font-weight:600;">${item.brand} ${item.model}</div>
                         <div class="cart-item-meta">
@@ -137,6 +144,20 @@ function closeCartDrawer() {
     const drawer = document.getElementById("cart-drawer");
     const overlay = document.getElementById("cart-drawer-overlay");
     if (drawer) drawer.classList.remove("open");
+    if (overlay) overlay.style.display = "none";
+}
+
+function openSidebar() {
+    const sidebar = document.querySelector(".store-sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    if (sidebar) sidebar.classList.add("open");
+    if (overlay) overlay.style.display = "block";
+}
+
+function closeSidebar() {
+    const sidebar = document.querySelector(".store-sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    if (sidebar) sidebar.classList.remove("open");
     if (overlay) overlay.style.display = "none";
 }
 
@@ -292,6 +313,9 @@ function initApp() {
 
     // Fetch products, sales, and reviews
     loadData();
+
+    // Initialize PWA installation options
+    initPWA();
 }
 
 function loadData() {
@@ -321,6 +345,7 @@ function loadData() {
         })
     ])
     .then(([fetchedProducts, fetchedSales, fetchedReviews]) => {
+        isOfflineMode = false;
         // Map backend phoneCondition to condition for UI compatibility
         products = fetchedProducts.map(p => {
             p.condition = p.phoneCondition || p.condition;
@@ -329,6 +354,11 @@ function loadData() {
         
         sales = fetchedSales;
         reviews = fetchedReviews;
+
+        // Cache locally
+        localStorage.setItem("phonezone_products", JSON.stringify(products));
+        localStorage.setItem("phonezone_sales", JSON.stringify(sales));
+        localStorage.setItem("phonezone_reviews", JSON.stringify(reviews));
 
         // Populate Dynamic Filter Lists
         populateFilterOptions();
@@ -343,18 +373,48 @@ function loadData() {
         renderCart();
     })
     .catch(err => {
-        console.error("Database connection failed: ", err);
-        if (grid) {
-            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; border: 1px dashed var(--color-danger); border-radius:12px; background:rgba(239,68,68,0.05);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="1.5" style="margin-bottom:15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                <h3 style="color:var(--text-primary); margin-bottom:8px;">Backend Connection Offline</h3>
-                <p style="color:var(--text-secondary); max-width:400px; margin:0 auto 20px auto; font-size:13.5px; line-height:1.5;">
-                    Unable to contact the PhoneZone API at <strong>${new URL(API_BASE_URL).host}</strong>. Please make sure the Spring Boot server is started and running.
-                </p>
-                <button class="btn btn-primary" onclick="loadData()">Retry Connection</button>
-            </div>`;
+        console.warn("Backend database connection failed. Falling back to Local Storage mode.", err);
+        isOfflineMode = true;
+
+        // Retrieve from localStorage or seed with default mock data
+        let localProducts = localStorage.getItem("phonezone_products");
+        let localSales = localStorage.getItem("phonezone_sales");
+        let localReviews = localStorage.getItem("phonezone_reviews");
+
+        if (localProducts) {
+            products = JSON.parse(localProducts);
+        } else {
+            products = (window.DEFAULT_PRODUCTS || []).map(p => {
+                p.condition = p.phoneCondition || p.condition;
+                return p;
+            });
+            localStorage.setItem("phonezone_products", JSON.stringify(products));
         }
-        toast("Backend connection failed. Read walkthrough to start Spring Boot.", "danger");
+
+        if (localSales) {
+            sales = JSON.parse(localSales);
+        } else {
+            sales = window.DEFAULT_SALES || [];
+            localStorage.setItem("phonezone_sales", JSON.stringify(sales));
+        }
+
+        if (localReviews) {
+            reviews = JSON.parse(localReviews);
+        } else {
+            reviews = window.DEFAULT_REVIEWS || [];
+            localStorage.setItem("phonezone_reviews", JSON.stringify(reviews));
+        }
+
+        // Render everything
+        populateFilterOptions();
+        renderStorefront();
+        renderDashboard();
+        renderReviewsWall();
+        updateCartCount();
+        renderCart();
+
+        // Show a custom top toast to let the user know they are in standalone mode
+        toast("Running in Standalone Mode (PC Server offline). Changes saved locally!", "info");
     });
 }
 
@@ -475,7 +535,7 @@ function renderStorefront() {
             const newBadgeHTML = isJustArrived(product.ageValue, product.ageUnit) ? '<span class="badge badge-new">Just Arrived</span>' : '';
             const displayAge = formatDeviceAge(product.ageValue, product.ageUnit);
             
-            const images = product.image ? product.image.split(",") : ["assets/images/iphone.png"];
+            const images = getProductImages(product.image);
             const mainImg = images[0] || "assets/images/iphone.png";
             const hoverImg = images.length > 1 ? images[1] : null;
             const hasHoverClass = hoverImg ? "has-hover-image" : "";
@@ -577,7 +637,7 @@ function renderDashboard() {
                 <td class="font-mono text-cyan" style="font-weight:600;">${p.id}</td>
                 <td>
                     <div class="table-device-cell">
-                        <img src="${p.image ? p.image.split(',')[0] : 'assets/images/iphone.png'}" alt="${p.model}" class="table-device-thumb" onerror="this.src='assets/images/iphone.png'">
+                        <img src="${getProductImages(p.image)[0]}" alt="${p.model}" class="table-device-thumb" onerror="this.src='assets/images/iphone.png'">
                         <div>
                             <div class="device-name-bold">${p.model}</div>
                             <div class="device-sub-brand">${p.brand} • ${p.ram}GB/${p.rom >= 1024 ? `${(p.rom/1024).toFixed(0)}TB` : `${p.rom}GB`} • 🔋${p.batteryHealth}%</div>
@@ -994,7 +1054,7 @@ window.openDetailsModal = function(productId) {
     selectedProductForPurchase = product;
 
     // Populate carousel track and dots
-    carouselImages = product.image ? product.image.split(",") : ["assets/images/iphone.png"];
+    carouselImages = getProductImages(product.image);
     currentSlideIndex = 0;
 
     const track = document.getElementById("detail-carousel-track");
@@ -1125,6 +1185,20 @@ function showCheckoutStep(stepNumber) {
 
 // --- Dashboard Inventory Actions ---
 window.toggleStockStatus = function(productId) {
+    if (isOfflineMode) {
+        const index = products.findIndex(p => p.id === productId);
+        if (index !== -1) {
+            const currentStock = products[index].stock;
+            const newStock = currentStock === "In Stock" ? "Out of Stock" : "In Stock";
+            products[index].stock = newStock;
+            localStorage.setItem("phonezone_products", JSON.stringify(products));
+            renderStorefront();
+            renderDashboard();
+            toast(`Stock status for ${products[index].model} updated to ${newStock}.`, "info");
+        }
+        return;
+    }
+
     fetch(`${API_BASE_URL}/toggle-stock/${productId}`, {
         method: "PUT",
         headers: {
@@ -1141,6 +1215,7 @@ window.toggleStockStatus = function(productId) {
         if (index !== -1) {
             products[index] = updatedProduct;
         }
+        localStorage.setItem("phonezone_products", JSON.stringify(products));
         renderStorefront();
         renderDashboard();
         toast(`Stock status for ${updatedProduct.model} updated to ${updatedProduct.stock}.`, "info");
@@ -1156,6 +1231,15 @@ window.deleteListing = function(productId) {
     if (!product) return;
 
     if (confirm(`Are you sure you want to permanently delete the listing for "${product.brand} ${product.model}"?`)) {
+        if (isOfflineMode) {
+            products = products.filter(p => p.id !== productId);
+            localStorage.setItem("phonezone_products", JSON.stringify(products));
+            renderStorefront();
+            renderDashboard();
+            toast("Product listing removed successfully.", "danger");
+            return;
+        }
+
         fetch(`${API_BASE_URL}/${productId}`, {
             method: "DELETE",
             headers: {
@@ -1165,6 +1249,7 @@ window.deleteListing = function(productId) {
         .then(res => {
             if (!res.ok) throw new Error("Failed to delete product listing");
             products = products.filter(p => p.id !== productId);
+            localStorage.setItem("phonezone_products", JSON.stringify(products));
             renderStorefront();
             renderDashboard();
             toast("Product listing removed successfully.", "danger");
@@ -1702,6 +1787,7 @@ function bindEvents() {
     }
 
     function switchView(viewName, skipScroll = false) {
+        closeSidebar();
         if (viewName === "store") {
             setNavActive("store");
             customerView.classList.add("active");
@@ -1860,6 +1946,20 @@ function bindEvents() {
         closeCartDrawer();
         openCheckoutModal();
     });
+
+    // Mobile Sidebar Drawer bindings
+    const btnMobileFilter = document.getElementById("btn-mobile-filter");
+    if (btnMobileFilter) {
+        btnMobileFilter.addEventListener("click", openSidebar);
+    }
+    const btnCloseSidebar = document.getElementById("btn-close-sidebar");
+    if (btnCloseSidebar) {
+        btnCloseSidebar.addEventListener("click", closeSidebar);
+    }
+    const sidebarOverlay = document.getElementById("sidebar-overlay");
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", closeSidebar);
+    }
 
     // Tracking Order bindings
     document.getElementById("btn-track-order").addEventListener("click", () => {
@@ -2265,6 +2365,26 @@ function bindEvents() {
                 batteryHealth
             };
 
+            if (isOfflineMode) {
+                // Ensure maps to condition
+                productPayload.condition = productPayload.phoneCondition || productPayload.condition;
+                
+                const index = products.findIndex(p => p.id === productPayload.id);
+                if (index !== -1) {
+                    products[index] = productPayload;
+                    toast("Listing updated successfully!");
+                } else {
+                    products.push(productPayload);
+                    toast("New phone listing published successfully!");
+                }
+
+                localStorage.setItem("phonezone_products", JSON.stringify(products));
+                toggleAddForm(false);
+                renderStorefront();
+                renderDashboard();
+                return;
+            }
+
             // Submit to Spring Boot API
             fetch(API_BASE_URL, {
                 method: "POST",
@@ -2306,6 +2426,7 @@ function bindEvents() {
                     toast("New phone listing published successfully!");
                 }
 
+                localStorage.setItem("phonezone_products", JSON.stringify(products));
                 toggleAddForm(false);
                 renderStorefront();
                 renderDashboard();
@@ -2482,6 +2603,33 @@ function bindEvents() {
                 comment
             };
 
+            if (isOfflineMode) {
+                const localReview = {
+                    ...payload,
+                    customerName: payload.customerName || "Anonymous Customer",
+                    customerEmail: payload.customerEmail || "customer@example.com",
+                    brandName: payload.brandName || "Device",
+                    modelName: payload.modelName || "Model",
+                    timestamp: Date.now()
+                };
+
+                // Try to find the order detail from sales to populate model and customer name
+                const matchingSale = sales.find(s => s.orderId === orderId);
+                if (matchingSale) {
+                    localReview.customerName = matchingSale.customerName;
+                    localReview.customerEmail = matchingSale.customerEmail;
+                    localReview.brandName = matchingSale.brand;
+                    localReview.modelName = matchingSale.model;
+                }
+
+                reviews.unshift(localReview);
+                localStorage.setItem("phonezone_reviews", JSON.stringify(reviews));
+                toast("Thank you! Your verified review has been published.", "success");
+                closeWriteReviewModal();
+                renderReviewsWall();
+                return;
+            }
+
             const reviewsUrl = API_BASE_URL.replace("/products", "/reviews");
 
             fetch(reviewsUrl, {
@@ -2504,6 +2652,7 @@ function bindEvents() {
             })
             .then(savedReview => {
                 reviews.unshift(savedReview); // Add to the top of list
+                localStorage.setItem("phonezone_reviews", JSON.stringify(reviews));
                 toast("Thank you! Your verified review has been published.", "success");
                 closeWriteReviewModal();
                 renderReviewsWall();
@@ -2575,6 +2724,85 @@ function completeTransaction() {
         customerCity: cityVal
     }));
 
+    if (isOfflineMode) {
+        // Run locally
+        const timestamp = Date.now();
+        const savedSales = salesPayload.map(s => {
+            s.timestamp = timestamp;
+            s.status = "Pending";
+            return s;
+        });
+
+        // Update local state: mark all items as sold out
+        savedSales.forEach(sale => {
+            const index = products.findIndex(p => p.id === sale.productId);
+            if (index !== -1) {
+                products[index].stock = "Out of Stock";
+            }
+            sales.push(sale);
+        });
+
+        // Save to localStorage
+        localStorage.setItem("phonezone_products", JSON.stringify(products));
+        localStorage.setItem("phonezone_sales", JSON.stringify(sales));
+
+        // Set active sales for invoice downloading
+        currentActiveSale = savedSales; 
+
+        // Update notifications count badge
+        unseenSalesCount += savedSales.length;
+        const badge = document.getElementById("admin-badge-count");
+        if (badge) {
+            badge.innerText = unseenSalesCount;
+            badge.style.display = "inline-flex";
+        }
+        const mobBadge = document.getElementById("mobile-admin-badge-count");
+        if (mobBadge) {
+            mobBadge.innerText = unseenSalesCount;
+            mobBadge.style.display = "inline-flex";
+        }
+
+        // Render digital receipt items
+        const receiptContainer = document.getElementById("receipt-items-container");
+        if (receiptContainer) {
+            receiptContainer.innerHTML = savedSales.map(sale => `
+                <div class="receipt-item-row" style="margin-bottom:6px;">
+                    <span class="item-name" style="font-weight:600; color:var(--text-primary);">${sale.brand} ${sale.model}</span>
+                    <span class="item-val" style="color:var(--color-cyan); font-weight:700;">${formatINR(sale.pricePaid)}</span>
+                </div>
+                <div class="receipt-item-row font-mono text-small" style="margin-top:-4px; margin-bottom:12px; font-size:11px; color:var(--text-secondary);">
+                    <span>IMEI: ${sale.imei} | Warranty: ${sale.warrantyLeft || 'Expired'}</span>
+                </div>
+            `).join("");
+        }
+
+        let grandTotal = savedSales.reduce((sum, item) => sum + item.pricePaid, 0);
+
+        document.getElementById("receipt-date-text").innerText = `Date: ${new Date(savedSales[0].timestamp).toLocaleDateString()}`;
+        document.getElementById("receipt-customer-name").innerText = savedSales[0].customerName;
+        document.getElementById("receipt-grand-total").innerText = formatINR(grandTotal);
+        document.getElementById("receipt-txid").innerText = savedSales[0].txId;
+
+        // Clear cart
+        cart = [];
+        saveCart();
+        renderCart();
+
+        // Show Success screen
+        showCheckoutStep(4);
+
+        // Trigger particle confetti celebration
+        launchConfetti();
+
+        // Refresh application renders
+        renderStorefront();
+        renderDashboard();
+
+        // Trigger Notification Toast
+        toast(`Insured payment approved. Order logged for ${savedSales[0].customerName}!`, "success");
+        return;
+    }
+
     // Submit bulk transaction to backend purchase endpoint
     fetch(`${API_BASE_URL}/purchase/bulk`, {
         method: "PUT",
@@ -2596,6 +2824,10 @@ function completeTransaction() {
             }
             sales.push(sale);
         });
+
+        // Save to localStorage
+        localStorage.setItem("phonezone_products", JSON.stringify(products));
+        localStorage.setItem("phonezone_sales", JSON.stringify(sales));
 
         // Set active sales for invoice downloading
         currentActiveSale = savedSales; 
@@ -2661,6 +2893,19 @@ function completeTransaction() {
 
 // --- Order Status Operations & Tracking Lookups ---
 window.updateSaleStatus = function(orderId, newStatus) {
+    if (isOfflineMode) {
+        // Update status of all sales in local state sharing this orderId
+        sales.forEach(sale => {
+            if (sale.orderId === orderId) {
+                sale.status = newStatus;
+            }
+        });
+        localStorage.setItem("phonezone_sales", JSON.stringify(sales));
+        toast(`Order ${orderId} status updated to ${newStatus}.`, "success");
+        renderDashboard();
+        return;
+    }
+
     fetch(`${API_BASE_URL}/purchase/status/${orderId}?status=${newStatus}`, {
         method: "PUT",
         headers: {
@@ -2678,6 +2923,7 @@ window.updateSaleStatus = function(orderId, newStatus) {
                 sale.status = newStatus;
             }
         });
+        localStorage.setItem("phonezone_sales", JSON.stringify(sales));
         toast(`Order ${orderId} status updated to ${newStatus}.`, "success");
         renderDashboard();
     })
@@ -2692,6 +2938,53 @@ window.trackOrder = function() {
     const orderId = inputEl.value.trim().toUpperCase();
     if (!orderId) {
         toast("Please enter an Order ID.", "warning");
+        return;
+    }
+
+    if (isOfflineMode) {
+        const orderItems = sales.filter(s => s.orderId === orderId);
+        if (orderItems.length === 0) {
+            document.getElementById("tracking-results-panel").style.display = "none";
+            toast(`Order reference "${orderId}" not found.`, "danger");
+            return;
+        }
+
+        document.getElementById("tracking-results-panel").style.display = "block";
+        document.getElementById("track-order-id-display").innerText = orderId;
+        
+        const orderDate = new Date(orderItems[0].timestamp).toLocaleDateString('en-IN');
+        document.getElementById("track-order-date").innerText = orderDate;
+
+        // Render the items in lookup list
+        const trackItemsList = document.getElementById("track-items-list");
+        trackItemsList.innerHTML = orderItems.map(item => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-glass);">
+                <div>
+                    <span style="font-weight:600; color:var(--text-primary); font-size:13.5px;">${item.brand} ${item.model}</span>
+                    <span style="font-family:monospace; font-size:11px; color:var(--text-secondary); margin-left:10px;">IMEI: ${item.imei}</span>
+                </div>
+                <span style="font-weight:700; color:var(--color-cyan); font-size:13.5px;">${formatINR(item.pricePaid)}</span>
+            </div>
+        `).join("");
+
+        // Update Timeline
+        const status = orderItems[0].status; 
+        updateTimelineProgress(status);
+
+        // Toggle review prompt based on Delivery status
+        const reviewPrompt = document.getElementById("tracking-review-prompt");
+        if (reviewPrompt) {
+            if (status === "Delivered") {
+                reviewPrompt.style.display = "flex";
+            } else {
+                reviewPrompt.style.display = "none";
+            }
+        }
+
+        // Store for invoice re-download in lookup section
+        window.trackActiveOrderItems = orderItems;
+
+        toast("Order details retrieved successfully.", "success");
         return;
     }
 
@@ -2781,6 +3074,107 @@ function updateTimelineProgress(status) {
             label.style.color = "";
         }
     });
+}
+
+// --- PWA Installation & Service Worker ---
+let deferredPrompt = null;
+
+function initPWA() {
+    // 1. Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => {
+                    console.log('Service Worker registered successfully with scope:', reg.scope);
+                })
+                .catch(err => {
+                    console.error('Service Worker registration failed:', err);
+                });
+        });
+    }
+
+    // 2. Capture beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent default browser install dialog from showing automatically
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        
+        // Show the install button in desktop header
+        const installBtn = document.getElementById('btn-app-install');
+        if (installBtn) {
+            installBtn.style.display = 'flex';
+        }
+
+        // Show the install banner on mobile
+        const isBannerDismissed = localStorage.getItem('pwa-banner-dismissed') === 'true';
+        if (!isBannerDismissed) {
+            const installBanner = document.getElementById('pwa-install-banner');
+            if (installBanner && window.innerWidth <= 768) {
+                installBanner.style.display = 'flex';
+            }
+        }
+    });
+
+    // 3. Handle successful installation
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('PhoneZone App was installed successfully!');
+        deferredPrompt = null;
+        hideInstallUI();
+        toast("PhoneZone App installed successfully!", "success");
+    });
+
+    // Bind event listeners for install actions
+    const installBtn = document.getElementById('btn-app-install');
+    if (installBtn) {
+        installBtn.addEventListener('click', triggerPWAInstall);
+    }
+
+    const bannerInstallBtn = document.getElementById('btn-banner-install');
+    if (bannerInstallBtn) {
+        bannerInstallBtn.addEventListener('click', triggerPWAInstall);
+    }
+
+    const bannerCloseBtn = document.getElementById('btn-banner-close');
+    if (bannerCloseBtn) {
+        bannerCloseBtn.addEventListener('click', () => {
+            const installBanner = document.getElementById('pwa-install-banner');
+            if (installBanner) {
+                installBanner.style.display = 'none';
+            }
+            // Save dismissal preference
+            localStorage.setItem('pwa-banner-dismissed', 'true');
+        });
+    }
+}
+
+function triggerPWAInstall() {
+    if (!deferredPrompt) return;
+    
+    // Show the browser install dialog
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the PWA install prompt');
+        } else {
+            console.log('User dismissed the PWA install prompt');
+        }
+        deferredPrompt = null;
+        hideInstallUI();
+    });
+}
+
+function hideInstallUI() {
+    const installBtn = document.getElementById('btn-app-install');
+    if (installBtn) {
+        installBtn.style.display = 'none';
+    }
+    const installBanner = document.getElementById('pwa-install-banner');
+    if (installBanner) {
+        installBanner.style.display = 'none';
+    }
 }
 
 // --- App Entry point ---

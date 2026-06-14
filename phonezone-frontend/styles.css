@@ -4,28 +4,28 @@
 
 /* Global Variables */
 :root {
-    --bg-dark: #070a13;
-    --bg-surface: rgba(15, 23, 42, 0.55);
-    --bg-surface-solid: #0f172a;
-    --border-glass: rgba(255, 255, 255, 0.06);
-    --border-glass-active: rgba(255, 255, 255, 0.15);
+    --bg-dark: hsl(222, 47%, 7%);
+    --bg-surface: hsla(223, 40%, 12%, 0.65);
+    --bg-surface-solid: hsl(223, 40%, 12%);
+    --border-glass: hsla(210, 40%, 98%, 0.06);
+    --border-glass-active: hsla(210, 40%, 98%, 0.15);
 
     /* Accents */
-    --color-violet: #8b5cf6;
-    --color-violet-glow: rgba(139, 92, 246, 0.3);
-    --color-cyan: #06b6d4;
-    --color-cyan-glow: rgba(6, 182, 212, 0.3);
-    --color-emerald: #10b981;
-    --color-emerald-glow: rgba(16, 185, 129, 0.2);
-    --color-amber: #f59e0b;
-    --color-amber-glow: rgba(245, 158, 11, 0.2);
-    --color-danger: #ef4444;
-    --color-danger-glow: rgba(239, 68, 68, 0.2);
+    --color-violet: hsl(263, 85%, 62%);
+    --color-violet-glow: hsla(263, 85%, 62%, 0.3);
+    --color-cyan: hsl(187, 95%, 48%);
+    --color-cyan-glow: hsla(187, 95%, 48%, 0.3);
+    --color-emerald: hsl(150, 84%, 44%);
+    --color-emerald-glow: hsla(150, 84%, 44%, 0.25);
+    --color-amber: hsl(38, 92%, 50%);
+    --color-amber-glow: hsla(38, 92%, 50%, 0.25);
+    --color-danger: hsl(354, 76%, 53%);
+    --color-danger-glow: hsla(354, 76%, 53%, 0.25);
 
     /* Text Colors */
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: hsl(210, 40%, 98%);
+    --text-secondary: hsl(215, 25%, 72%);
+    --text-muted: hsl(215, 16%, 47%);
 
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
@@ -33,9 +33,9 @@
 
     /* Layout Constants */
     --header-height: 80px;
-    --border-radius-sm: 8px;
-    --border-radius-md: 16px;
-    --border-radius-lg: 24px;
+    --border-radius-sm: 10px;
+    --border-radius-md: 20px;
+    --border-radius-lg: 28px;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -226,6 +226,7 @@ button {
     color: var(--text-secondary);
     transition: var(--transition-smooth);
     position: relative;
+    border: 1px solid transparent;
 }
 
 .nav-link svg {
@@ -238,20 +239,20 @@ button {
 }
 
 .nav-link.active {
-    color: white;
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    color: var(--color-cyan) !important;
+    background: rgba(6, 182, 212, 0.08) !important;
+    border-color: rgba(6, 182, 212, 0.25) !important;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.1) !important;
 }
 
 .nav-link.active:hover {
-    color: white !important;
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
-    opacity: 0.95;
-    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
+    color: var(--color-cyan) !important;
+    background: rgba(6, 182, 212, 0.12) !important;
+    border-color: rgba(6, 182, 212, 0.35) !important;
 }
 
 .nav-link.active svg {
-    stroke: white;
+    stroke: var(--color-cyan) !important;
 }
 
 .badge-admin-notify {
@@ -456,29 +457,27 @@ button {
     background: var(--bg-surface);
     border: 1px solid var(--border-glass);
     border-radius: var(--border-radius-md);
-    padding: 20px 10px;
+    padding: 25px;
     position: sticky;
     top: calc(var(--header-height) + 30px);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 
-    /* Collapsed desktop state default */
-    width: 65px;
-    height: auto;
-    min-height: 480px;
-    overflow: hidden;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    white-space: nowrap;
-    z-index: 10;
-}
-
-.store-sidebar:hover,
-.store-sidebar:focus-within {
+    /* Permanently open desktop state */
     width: 280px;
-    padding: 25px;
+    height: auto;
     max-height: calc(100vh - var(--header-height) - 60px);
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 10;
+}
+
+.sidebar-close-btn {
+    display: none;
+}
+
+.mobile-filter-trigger {
+    display: none;
 }
 
 /* Custom Scrollbar for store sidebar */
@@ -509,38 +508,12 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .store-sidebar::before {
-    content: "⚡ FILTERS";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-90deg);
-    transform-origin: center;
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 15px;
-    letter-spacing: 0.3em;
-    color: var(--color-cyan);
-    opacity: 1;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
+    display: none;
 }
 
-.store-sidebar:hover::before,
-.store-sidebar:focus-within::before {
-    opacity: 0;
-}
-
-.store-sidebar>* {
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    pointer-events: none;
-}
-
-.store-sidebar:hover>*,
-.store-sidebar:focus-within>* {
+.store-sidebar > * {
     opacity: 1;
     pointer-events: auto;
-    transition: opacity 0.3s ease 0.1s;
 }
 
 .sidebar-header {
@@ -794,6 +767,8 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
         0 6px 20px rgba(0, 0, 0, 0.35),
         0 0 0 1px rgba(6, 182, 212, 0.04),
         0 0 12px rgba(139, 92, 246, 0.03);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
 }
 
 .phone-card:hover {
@@ -887,10 +862,10 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 .badge {
     padding: 4px 10px;
     border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 9px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.06em;
     border: 1px solid transparent;
 }
 
@@ -1049,27 +1024,34 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .phone-specs-mini {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 6px;
-    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
     font-size: 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     margin-bottom: 15px;
     color: var(--text-secondary);
     transition: var(--transition-smooth);
 }
 
 .phone-card:hover .phone-specs-mini {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: transparent;
+    border-color: transparent;
 }
 
 .spec-line {
     display: flex;
     justify-content: space-between;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.spec-line:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .spec-line span:first-child {
@@ -1104,8 +1086,15 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 
 .discount-percentage {
     color: var(--color-emerald);
-    font-size: 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    font-size: 10px;
     font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
 }
 
 .card-actions-btn {
@@ -1119,12 +1108,40 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
     font-size: 13px;
     text-align: center;
     transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.card-actions-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 25%;
+    height: 200%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.2) 30%,
+            rgba(255, 255, 255, 0.45) 50%,
+            rgba(255, 255, 255, 0.2) 70%,
+            rgba(255, 255, 255, 0) 100%);
+    transform: rotate(25deg);
+    transition: none;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .phone-card:hover .card-actions-btn {
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
+    background: linear-gradient(135deg, var(--color-cyan) 0%, hsl(187, 95%, 38%) 100%);
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+}
+
+.phone-card:hover .card-actions-btn::before {
+    animation: shimmer-sweep 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
 }
 
 .phone-card.out-of-stock .phone-card-image-box {
@@ -1183,14 +1200,42 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan));
+    background: linear-gradient(135deg, var(--color-violet) 0%, hsl(263, 85%, 52%) 100%);
     color: white;
     box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 25%;
+    height: 200%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.2) 30%,
+            rgba(255, 255, 255, 0.45) 50%,
+            rgba(255, 255, 255, 0.2) 70%,
+            rgba(255, 255, 255, 0) 100%);
+    transform: rotate(25deg);
+    transition: none;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45);
+}
+
+.btn-primary:hover:not(:disabled)::before {
+    animation: shimmer-sweep 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
 }
 
 .btn-primary:disabled {
@@ -1207,8 +1252,9 @@ body.light-mode .store-sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--border-glass-active);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
 }
 
 .btn-block {
@@ -2537,33 +2583,65 @@ textarea.form-control {
     }
 
     .store-sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        min-height: auto;
+        position: fixed;
+        top: 0;
+        left: -320px;
+        width: 300px;
+        height: 100vh;
+        min-height: 100vh;
+        max-height: 100vh;
+        background: #0a0f1d;
+        border-right: 1px solid var(--border-glass);
+        border-left: none;
+        border-top: none;
+        border-bottom: none;
+        border-radius: 0;
         padding: 25px;
-        overflow: visible;
+        margin-bottom: 0;
+        overflow-y: auto;
+        z-index: 1060;
+        transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         white-space: normal;
-        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        box-shadow: 10px 0 45px rgba(0, 0, 0, 0.6);
+    }
+
+    body.light-mode .store-sidebar {
+        background: #ffffff;
+        box-shadow: 10px 0 45px rgba(15, 23, 42, 0.08);
+    }
+
+    .store-sidebar.open {
+        left: 0;
     }
 
     .store-sidebar:hover {
-        width: 100%;
-        padding: 25px;
+        /* No hover changes on mobile drawer */
     }
 
-    .store-sidebar::before {
-        display: none;
+    .sidebar-close-btn {
+        display: flex;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-smooth);
     }
 
-    .store-sidebar>* {
-        opacity: 1;
-        pointer-events: auto;
+    .sidebar-close-btn:hover {
+        color: white;
     }
 
-    .store-sidebar:hover>* {
-        opacity: 1;
-        pointer-events: auto;
+    body.light-mode .sidebar-close-btn:hover {
+        color: #0f172a;
+    }
+
+    .mobile-filter-trigger {
+        display: inline-flex;
     }
 
     .modal-content-grid {
@@ -3075,34 +3153,25 @@ textarea.form-control {
    LIGHT MODE STYLING & VARIABLES OVERRIDE
    ========================================================================== */
 body.light-mode {
-    --bg-dark: #f1f5f9;
-    /* Soft, premium light slate background */
-    --bg-surface: rgba(255, 255, 255, 0.85);
-    /* Semi-transparent card backdrops */
-    --bg-surface-solid: #ffffff;
-    --border-glass: rgba(15, 23, 42, 0.08);
-    --border-glass-active: rgba(15, 23, 42, 0.16);
+    --bg-dark: hsl(210, 40%, 96%);
+    --bg-surface: hsla(0, 0%, 100%, 0.85);
+    --bg-surface-solid: hsl(0, 0%, 100%);
+    --border-glass: hsla(222, 47%, 11%, 0.08);
+    --border-glass-active: hsla(222, 47%, 11%, 0.16);
 
-    --text-primary: #0f172a;
-    /* Slate 900 for high readability */
-    --text-secondary: #334155;
-    /* Slate 700 */
-    --text-muted: #64748b;
-    /* Slate 500 */
+    --text-primary: hsl(222, 47%, 11%);
+    --text-secondary: hsl(217, 19%, 27%);
+    --text-muted: hsl(215, 16%, 47%);
 
     /* Light Mode Rich Contrast Accents */
-    --color-violet: #7c3aed;
-    /* Vibrant Violet 600 */
-    --color-violet-glow: rgba(124, 58, 237, 0.15);
-    --color-cyan: #0891b2;
-    /* Rich Cyan 600 */
-    --color-cyan-glow: rgba(8, 145, 178, 0.15);
-    --color-emerald: #059669;
-    /* Emerald 600 */
-    --color-emerald-glow: rgba(5, 150, 105, 0.15);
-    --color-amber: #d97706;
-    /* Amber 600 */
-    --color-amber-glow: rgba(217, 119, 6, 0.15);
+    --color-violet: hsl(258, 81%, 59%);
+    --color-violet-glow: hsla(258, 81%, 59%, 0.15);
+    --color-cyan: hsl(192, 91%, 38%);
+    --color-cyan-glow: hsla(192, 91%, 38%, 0.15);
+    --color-emerald: hsl(160, 84%, 39%);
+    --color-emerald-glow: hsla(160, 84%, 39%, 0.15);
+    --color-amber: hsl(35, 92%, 45%);
+    --color-amber-glow: hsla(35, 92%, 45%, 0.15);
 
     background-image:
         radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 40%),
@@ -3243,6 +3312,144 @@ body:not(.light-mode) .theme-toggle-btn .moon-icon {
     display: none;
 }
 
+/* Install Button Style (Desktop/Laptop) */
+.install-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    display: none; /* Controlled dynamically by app.js */
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.install-btn:hover {
+    color: var(--color-cyan);
+    background: rgba(6, 182, 212, 0.05);
+    border-color: rgba(6, 182, 212, 0.2);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+}
+
+body.light-mode .install-btn {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+body.light-mode .install-btn:hover {
+    color: var(--color-violet);
+    background: rgba(124, 58, 237, 0.05);
+    border-color: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+}
+
+/* PWA Install Banner for Mobile */
+.install-banner {
+    position: fixed;
+    top: calc(var(--header-height) + 15px);
+    left: 20px;
+    right: 20px;
+    z-index: 150; /* Ensure it stays above navigation overlay */
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border: 1px solid var(--border-glass-active);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    animation: slideDownIn 0.5s var(--transition-bounce);
+}
+
+@keyframes slideDownIn {
+    from {
+        transform: translateY(-80px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.install-banner .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.install-banner .banner-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--color-violet), var(--color-cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+.install-banner .banner-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+body.light-mode .install-banner .banner-text h4 {
+    color: #0f172a;
+}
+
+.install-banner .banner-text p {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 2px 0 0 0;
+}
+
+.install-banner .banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.install-banner .btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+}
+
+.install-banner .btn-close-banner {
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+}
+
+.install-banner .btn-close-banner:hover {
+    color: white;
+}
+
+body.light-mode .install-banner .btn-close-banner:hover {
+    color: #0f172a;
+}
+
+/* Make banner only show on mobile */
+@media (min-width: 769px) {
+    .install-banner {
+        display: none !important;
+    }
+}
+
+
 /* Visual corrections for Light Mode cards/shadows */
 body.light-mode .phone-card {
     background: #ffffff;
@@ -3263,14 +3470,13 @@ body.light-mode .phone-card:hover {
 }
 
 body.light-mode .phone-specs-mini {
-    background: #f8fafc;
-    border-color: rgba(15, 23, 42, 0.06);
-    transition: var(--transition-smooth);
+    background: transparent;
+    border: none;
+    padding: 0;
 }
 
-body.light-mode .phone-card:hover .phone-specs-mini {
-    background: #f1f5f9;
-    border-color: rgba(15, 23, 42, 0.1);
+body.light-mode .spec-line {
+    border-bottom-color: rgba(15, 23, 42, 0.06);
 }
 
 body.light-mode .spec-line span:last-child {
@@ -3294,6 +3500,7 @@ body.light-mode .btn-outline:hover {
     background: rgba(124, 58, 237, 0.06);
     border-color: var(--color-violet);
     color: var(--color-violet);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
 }
 
 /* Retain high-contrast outline button in hero carousel banner */
@@ -3319,16 +3526,20 @@ body.light-mode .nav-link:hover {
 }
 
 body.light-mode .nav-link.active {
-    color: white !important;
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25) !important;
+    color: var(--color-violet) !important;
+    background: rgba(124, 58, 237, 0.08) !important;
+    border-color: rgba(124, 58, 237, 0.25) !important;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.08) !important;
 }
 
 body.light-mode .nav-link.active:hover {
-    color: white !important;
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
-    opacity: 0.92;
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+    color: var(--color-violet) !important;
+    background: rgba(124, 58, 237, 0.12) !important;
+    border-color: rgba(124, 58, 237, 0.35) !important;
+}
+
+body.light-mode .nav-link.active svg {
+    stroke: var(--color-violet) !important;
 }
 
 body.light-mode .cart-btn {
@@ -3348,9 +3559,10 @@ body.light-mode .store-sidebar {
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.03);
 }
 
-body.light-mode .store-sidebar::before {
-    color: #0f172a;
-    /* High contrast collapsed sidebar vertical title */
+body.light-mode .discount-percentage {
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.2);
+    color: #047857;
 }
 
 body.light-mode .sidebar-header {
@@ -3642,18 +3854,18 @@ body.light-mode .phone-card-details {
 }
 
 body.light-mode .card-actions-btn {
-    background: rgba(124, 58, 237, 0.05) !important;
-    border: 1.5px solid var(--color-violet) !important;
-    color: var(--color-violet) !important;
+    background: rgba(8, 145, 178, 0.05) !important;
+    border: 1.5px solid var(--color-cyan) !important;
+    color: var(--color-cyan) !important;
     font-weight: 700 !important;
 }
 
 body.light-mode .phone-card:hover .card-actions-btn,
 body.light-mode .card-actions-btn:hover {
     color: white !important;
-    background: linear-gradient(to right, var(--color-violet), var(--color-cyan)) !important;
+    background: linear-gradient(135deg, var(--color-cyan) 0%, hsl(192, 91%, 38%) 100%) !important;
     border-color: transparent !important;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
 }
 
 /* Premium Opaque Hero Carousel in Light Mode */

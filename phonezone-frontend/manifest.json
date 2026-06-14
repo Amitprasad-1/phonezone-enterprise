@@ -1,16 +1,26 @@
 {
+  "id": "/phonezone-app",
   "short_name": "PhoneZone",
   "name": "PhoneZone Premium Store",
+  "description": "Buy premium second-hand and open-box smartphones with verified IMEIs and warranty.",
   "icons": [
     {
-      "src": "/favicon.png?v=10",
+      "src": "favicon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "/apple-touch-icon.png?v=10",
+      "src": "favicon-192.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "favicon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
   "start_url": "/index.html",
