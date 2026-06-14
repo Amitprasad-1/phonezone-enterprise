@@ -25,8 +25,19 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Override
     public void run(String... args) throws Exception {
+        try {
+            // Ensure products.image is LONGTEXT (forces upgrade on MySQL if table was created with an old schema)
+            jdbcTemplate.execute("ALTER TABLE products MODIFY COLUMN image LONGTEXT");
+            System.out.println(">>> Verified products.image datatype is LONGTEXT");
+        } catch (Exception e) {
+            System.out.println(">>> products.image column modification check complete: " + e.getMessage());
+        }
+
         if (productRepository.count() < 10) {
             // Clear existing seed data to prevent duplicate keys
             productRepository.deleteAll();
